@@ -27,37 +27,38 @@ class Bag:
     def __str__(self):
         for line in self.bag:
             "\n"
-    def add_to_bag(self, tile, quantity=1):
+
+    def add_to_bag(self, tile, quantity):
         for i in range(quantity):
             self.bag.append(tile)
 
     def initialize_bag(self):
-        self.add_to_bag(Tile("A", 1, 9))
-        self.add_to_bag(Tile("B", 3, 2))
-        self.add_to_bag(Tile("C", 3, 2))
-        self.add_to_bag(Tile("D", 2, 4))
-        self.add_to_bag(Tile("E", 1, 12))
-        self.add_to_bag(Tile("F", 4, 2))
-        self.add_to_bag(Tile("G", 2, 3))
-        self.add_to_bag(Tile("H", 4, 2))
-        self.add_to_bag(Tile("I", 1, 9))
-        self.add_to_bag(Tile("J", 1, 9))
-        self.add_to_bag(Tile("K", 5, 1))
-        self.add_to_bag(Tile("L", 1, 4))
-        self.add_to_bag(Tile("M", 3, 2))
-        self.add_to_bag(Tile("N", 1, 6))
-        self.add_to_bag(Tile("O", 1, 8))
-        self.add_to_bag(Tile("P", 3, 2))
-        self.add_to_bag(Tile("Q", 10, 1))
-        self.add_to_bag(Tile("R", 1, 6))
-        self.add_to_bag(Tile("S", 1, 4))
-        self.add_to_bag(Tile("T", 1, 6))
-        self.add_to_bag(Tile("U", 1, 4))
-        self.add_to_bag(Tile("V", 4, 2))
-        self.add_to_bag(Tile("W", 4, 2))
-        self.add_to_bag(Tile("X", 8, 1))
-        self.add_to_bag(Tile("Y", 4, 2))
-        self.add_to_bag(Tile("Z", 10, 1))
+        self.add_to_bag(Tile("A", 1), 9)
+        self.add_to_bag(Tile("B", 3), 2)
+        self.add_to_bag(Tile("C", 3), 2)
+        self.add_to_bag(Tile("D", 2), 4)
+        self.add_to_bag(Tile("E", 1), 12)
+        self.add_to_bag(Tile("F", 4), 2)
+        self.add_to_bag(Tile("G", 2), 3)
+        self.add_to_bag(Tile("H", 4), 2)
+        self.add_to_bag(Tile("I", 1), 9)
+        self.add_to_bag(Tile("J", 1), 9)
+        self.add_to_bag(Tile("K", 5), 1)
+        self.add_to_bag(Tile("L", 1), 4)
+        self.add_to_bag(Tile("M", 3), 2)
+        self.add_to_bag(Tile("N", 1), 6)
+        self.add_to_bag(Tile("O", 1), 8)
+        self.add_to_bag(Tile("P", 3), 2)
+        self.add_to_bag(Tile("Q", 10), 1)
+        self.add_to_bag(Tile("R", 1), 6)
+        self.add_to_bag(Tile("S", 1), 4)
+        self.add_to_bag(Tile("T", 1), 6)
+        self.add_to_bag(Tile("U", 1), 4)
+        self.add_to_bag(Tile("V", 4), 2)
+        self.add_to_bag(Tile("W", 4), 2)
+        self.add_to_bag(Tile("X", 8), 1)
+        self.add_to_bag(Tile("Y", 4), 2)
+        self.add_to_bag(Tile("Z", 10), 1)
 
     def take_from_bag(self):
         return self.bag.pop()
@@ -74,6 +75,17 @@ class Rack:
         for i in range(7):
             self.add_to_rack(bag)
 
+class Player:
+    def __init__(self, bag):
+        self.name = ""
+        self.rack = Rack(bag)
+
+    def set_name(self, name):
+        self.name = name
+
+    def get_name(self):
+        return self.name
+
 class Board:
     def __init__(self):
         self.board = [["00" for i in range(15)] for j in range(15)]
@@ -88,6 +100,7 @@ class Board:
         board_str = "\n|_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ |\n".join(board)
 
         return board_str
+
     def add_premium_squares(self):
         TRIPLE_WORD_SCORE = ((0,0), (7, 0), (14,0), (0, 7), (14, 7), (0, 14), (7, 14), (14,14))
         DOUBLE_WORD_SCORE = ((1,1), (2,2), (3,3), (4,4), (1, 13), (2, 12), (3, 11), (4, 10), (13, 1), (12, 2), (11, 3), (10, 4), (13,13), (12, 12), (11,11), (10,10))
@@ -103,11 +116,20 @@ class Board:
         for coordinate in DOUBLE_LETTER_SCORE:
             self.board[coordinate[0]][coordinate[1]] = "2L"
 
-class Player:
-    def __init__(self, bag):
-        self.bag = bag
-        self.name = ""
-        self.rack = Rack()
 
-    def set_name(self, name):
-        self.name = name
+
+def start_game():
+    board = Board()
+
+    bag = Bag()
+    bag.initialize_bag()
+
+    player1 = Player(bag)
+    player2 = Player(bag)
+
+    print("Welcome to Scrabble! Please enter the names of the players below.")
+    player1.set_name(raw_input("Player 1: "))
+    player2.set_name(raw_input("Player 2: "))
+
+    print("Welcome " + player1.get_name() + " and " + player2.get_name() + "! Let's begin!")
+start_game()
