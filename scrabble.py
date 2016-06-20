@@ -1,3 +1,10 @@
+try:
+    import simplegui, pygame
+except ImportError:
+    import SimpleGUICS2Pygame.simpleguics2pygame as simplegui
+
+    simplegui.Frame._hide_status = True
+
 """
 Scrabble Game
 Classes:
@@ -17,6 +24,9 @@ class Bag:
     def __init__(self):
         self.bag = []
 
+    def __str__(self):
+        for line in self.bag:
+            "\n"
     def add_to_bag(self, tile, quantity=1):
         for i in range(quantity):
             self.bag.append(tile)
@@ -66,13 +76,18 @@ class Rack:
 
 class Board:
     def __init__(self):
-        self.board = [[0 for i in range(15)] for j in range(15)]
+        self.board = [["00" for i in range(15)] for j in range(15)]
         self.add_premium_squares()
 
     def print_board(self):
-        for line in self.board:
-            print(line)
+        #Create evenly spaced table!
+        board_str = ""
+        board = list(self.board)
+        for i in range(len(board)):
+            board[i] ="| " + " | ".join(str(item) for item in board[i]) + " |"
+        board_str = "\n|_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ |\n".join(board)
 
+        return board_str
     def add_premium_squares(self):
         TRIPLE_WORD_SCORE = ((0,0), (7, 0), (14,0), (0, 7), (14, 7), (0, 14), (7, 14), (14,14))
         DOUBLE_WORD_SCORE = ((1,1), (2,2), (3,3), (4,4), (1, 13), (2, 12), (3, 11), (4, 10), (13, 1), (12, 2), (11, 3), (10, 4), (13,13), (12, 12), (11,11), (10,10))
@@ -80,10 +95,19 @@ class Board:
         DOUBLE_LETTER_SCORE = ((0, 3), (0,11), (2,6), (2,8), (3,0), (3,7), (3,14), (6,2), (6,6), (6,8), (6,12), (7,3), (7,11), (8,2), (8,6), (8,8), (8, 12), (11,0), (11,7), (11,14), (12,6), (12,8), (14, 3), (14, 11))
 
         for coordinate in TRIPLE_WORD_SCORE:
-            self.board[coordinate[0]][coordinate[1]] = "TWS"
+            self.board[coordinate[0]][coordinate[1]] = "3W"
         for coordinate in TRIPLE_LETTER_SCORE:
-            self.board[coordinate[0]][coordinate[1]] = "TLS"
+            self.board[coordinate[0]][coordinate[1]] = "3L"
         for coordinate in DOUBLE_WORD_SCORE:
-            self.board[coordinate[0]][coordinate[1]] = "DWS"
+            self.board[coordinate[0]][coordinate[1]] = "2W"
         for coordinate in DOUBLE_LETTER_SCORE:
-            self.board[coordinate[0]][coordinate[1]] = "DLS"
+            self.board[coordinate[0]][coordinate[1]] = "2L"
+
+class Player:
+    def __init__(self, bag):
+        self.bag = bag
+        self.name = ""
+        self.rack = Rack()
+
+    def set_name(self, name):
+        self.name = name
