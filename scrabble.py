@@ -1,9 +1,9 @@
 try:
-    import simplegui, pygame
+    import simplegui
 except ImportError:
     import SimpleGUICS2Pygame.simpleguics2pygame as simplegui
-
     simplegui.Frame._hide_status = True
+from random import shuffle
 
 """
 Scrabble Game
@@ -19,7 +19,8 @@ class Tile:
     def __init__(self, letter, score):
         self.letter = letter
         self.score = score
-
+    def __str__(self):
+        return self.letter
 class Bag:
     def __init__(self):
         self.bag = []
@@ -59,7 +60,7 @@ class Bag:
         self.add_to_bag(Tile("X", 8), 1)
         self.add_to_bag(Tile("Y", 4), 2)
         self.add_to_bag(Tile("Z", 10), 1)
-
+        shuffle(self.bag)
     def take_from_bag(self):
         return self.bag.pop()
 
@@ -75,6 +76,11 @@ class Rack:
         for i in range(7):
             self.add_to_rack(bag)
 
+    def get_rack_str(self):
+        return ", ".join(str(item) for item in self.rack)
+
+    def get_rack_arr(self):
+        return self.rack
 class Player:
     def __init__(self, bag):
         self.name = ""
@@ -86,18 +92,22 @@ class Player:
     def get_name(self):
         return self.name
 
+    def get_rack(self):
+        return self.rack.get_rack_str()
+
 class Board:
     def __init__(self):
-        self.board = [["00" for i in range(15)] for j in range(15)]
+        self.board = [[" 0 " for i in range(15)] for j in range(15)]
         self.add_premium_squares()
+        self.board[7][7] = " * "
 
-    def print_board(self):
+    def get_board(self):
         #Create evenly spaced table!
         board_str = ""
         board = list(self.board)
         for i in range(len(board)):
             board[i] ="| " + " | ".join(str(item) for item in board[i]) + " |"
-        board_str = "\n|_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ |\n".join(board)
+        board_str = "\n|_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _|\n".join(board)
 
         return board_str
 
@@ -108,17 +118,57 @@ class Board:
         DOUBLE_LETTER_SCORE = ((0, 3), (0,11), (2,6), (2,8), (3,0), (3,7), (3,14), (6,2), (6,6), (6,8), (6,12), (7,3), (7,11), (8,2), (8,6), (8,8), (8, 12), (11,0), (11,7), (11,14), (12,6), (12,8), (14, 3), (14, 11))
 
         for coordinate in TRIPLE_WORD_SCORE:
-            self.board[coordinate[0]][coordinate[1]] = "3W"
+            self.board[coordinate[0]][coordinate[1]] = "TWS"
         for coordinate in TRIPLE_LETTER_SCORE:
-            self.board[coordinate[0]][coordinate[1]] = "3L"
+            self.board[coordinate[0]][coordinate[1]] = "TLS"
         for coordinate in DOUBLE_WORD_SCORE:
-            self.board[coordinate[0]][coordinate[1]] = "2W"
+            self.board[coordinate[0]][coordinate[1]] = "DWS"
         for coordinate in DOUBLE_LETTER_SCORE:
-            self.board[coordinate[0]][coordinate[1]] = "2L"
+            self.board[coordinate[0]][coordinate[1]] = "DLS"
 
+    def play_word(self, word, location, direction):
+        direction.lower()
+        word = word.upper()
+        if direction == "right":
+            for i in range(len(word)):
+                self.board[location[0]][location[1]+i] = " " + word[i] + " "
+        elif direction == "down":
+            for i in range(len(word)):
+                self.board[location[0]+i][location[1]] = " " + word[i] + " "
+        else:
+            print("Error: please enter a valid direction.")
 
+def check_word(word, location, player):
+    word = word.upper()
+    #Check that the word is in the dictionary
+    dictionary = open("dic.txt").read()
+    if word not in dictionary:
+        return "Please enter a valid dictionary word."
+    for letter in word:
+        if letter not in player.get_rack():
+            return "You do not have the tiles for this word."
+    if location[0] > 14 or location[1] > 14 or location[0] < 0 or location[1] < 0:
+        return "Location out of bounds."
+    return True
+
+def turn(player, board):
+    global round_number
+    print("Round " + str(round_number) + ": " + player.get_name() + "'s turn \n")
+    print(board.get_board())
+    print("\n" + player.get_name() + "'s Letter Rack: " + player.rack.get_rack_str())
+    word_to_play = raw_input("Word to play: ")
+    location = raw_input("Location of first letter: (Please separate coordinates with a comma)")
+    direction = raw_input("Direction of word (right or down): ")
+    while (check_word(word_to_play, location, player)) != True:
+        word_to_play = raw_input("Word to play: ")
+        location = raw_input("Location of first letter: ")
+        direction = raw_input("Direction of word (right or down): ")
+        print (check_word(word_to_play, location, player))
+    board.play_word(word_to_play, tuple(map(int,location.split(','))), direction)
+    print(board.get_board())
 
 def start_game():
+    global round_number
     board = Board()
 
     bag = Bag()
@@ -126,10 +176,13 @@ def start_game():
 
     player1 = Player(bag)
     player2 = Player(bag)
+    current_player = player1
+    round_number = 1
 
     print("Welcome to Scrabble! Please enter the names of the players below.")
     player1.set_name(raw_input("Player 1: "))
     player2.set_name(raw_input("Player 2: "))
-
     print("Welcome " + player1.get_name() + " and " + player2.get_name() + "! Let's begin!")
+
+    turn(current_player, board)
 start_game()
