@@ -14,22 +14,50 @@ Bag - keeps track of the remaining tiles in the bag
 Word - checks the validity of a word and its placement
 Board - keeps track of the tiles' location on the board
 """
-
+LETTER_VALUES = {"A": 1,
+                 "B": 3,
+                 "C": 3,
+                 "D": 2,
+                 "E": 1,
+                 "F": 4,
+                 "G": 2,
+                 "H": 4,
+                 "I": 1,
+                 "J": 1,
+                 "K": 5,
+                 "L": 1,
+                 "M": 3,
+                 "N": 1,
+                 "O": 1,
+                 "P": 3,
+                 "Q": 10,
+                 "R": 1,
+                 "S": 1,
+                 "T": 1,
+                 "U": 1,
+                 "V": 4,
+                 "W": 4,
+                 "X": 8,
+                 "Y": 4,
+                 "Z": 10}
 class Tile:
     """
     Class that allows for the creation of a tile. Initializes using an uppercase string of one letter,
     and an integer representing that letter's score.
     """
-    def __init__(self, letter, score):
+    def __init__(self, letter, letter_values):
         self.letter = letter.upper()
-        self.score = score
-
+        if self.letter in letter_values:
+            self.score = letter_values[self.letter]
+        else:
+            self.score = 0
     def __str__(self):
         return self.letter
 
-    def get_score():
+    def get_score(self):
         #Returns the tile's score value.
         return self.score
+
 
 class Bag:
     """
@@ -51,32 +79,33 @@ class Bag:
 
     def initialize_bag(self):
         #Adds the intiial 100 tiles to the bag.
-        self.add_to_bag(Tile("A", 1), 9)
-        self.add_to_bag(Tile("B", 3), 2)
-        self.add_to_bag(Tile("C", 3), 2)
-        self.add_to_bag(Tile("D", 2), 4)
-        self.add_to_bag(Tile("E", 1), 12)
-        self.add_to_bag(Tile("F", 4), 2)
-        self.add_to_bag(Tile("G", 2), 3)
-        self.add_to_bag(Tile("H", 4), 2)
-        self.add_to_bag(Tile("I", 1), 9)
-        self.add_to_bag(Tile("J", 1), 9)
-        self.add_to_bag(Tile("K", 5), 1)
-        self.add_to_bag(Tile("L", 1), 4)
-        self.add_to_bag(Tile("M", 3), 2)
-        self.add_to_bag(Tile("N", 1), 6)
-        self.add_to_bag(Tile("O", 1), 8)
-        self.add_to_bag(Tile("P", 3), 2)
-        self.add_to_bag(Tile("Q", 10), 1)
-        self.add_to_bag(Tile("R", 1), 6)
-        self.add_to_bag(Tile("S", 1), 4)
-        self.add_to_bag(Tile("T", 1), 6)
-        self.add_to_bag(Tile("U", 1), 4)
-        self.add_to_bag(Tile("V", 4), 2)
-        self.add_to_bag(Tile("W", 4), 2)
-        self.add_to_bag(Tile("X", 8), 1)
-        self.add_to_bag(Tile("Y", 4), 2)
-        self.add_to_bag(Tile("Z", 10), 1)
+        global LETTER_VALUES
+        self.add_to_bag(Tile("A", LETTER_VALUES), 9)
+        self.add_to_bag(Tile("B", LETTER_VALUES), 2)
+        self.add_to_bag(Tile("C", LETTER_VALUES), 2)
+        self.add_to_bag(Tile("D", LETTER_VALUES), 4)
+        self.add_to_bag(Tile("E", LETTER_VALUES), 12)
+        self.add_to_bag(Tile("F", LETTER_VALUES), 2)
+        self.add_to_bag(Tile("G", LETTER_VALUES), 3)
+        self.add_to_bag(Tile("H", LETTER_VALUES), 2)
+        self.add_to_bag(Tile("I", LETTER_VALUES), 9)
+        self.add_to_bag(Tile("J", LETTER_VALUES), 9)
+        self.add_to_bag(Tile("K", LETTER_VALUES), 1)
+        self.add_to_bag(Tile("L", LETTER_VALUES), 4)
+        self.add_to_bag(Tile("M", LETTER_VALUES), 2)
+        self.add_to_bag(Tile("N", LETTER_VALUES), 6)
+        self.add_to_bag(Tile("O", LETTER_VALUES), 8)
+        self.add_to_bag(Tile("P", LETTER_VALUES), 2)
+        self.add_to_bag(Tile("Q", LETTER_VALUES), 1)
+        self.add_to_bag(Tile("R", LETTER_VALUES), 6)
+        self.add_to_bag(Tile("S", LETTER_VALUES), 4)
+        self.add_to_bag(Tile("T", LETTER_VALUES), 6)
+        self.add_to_bag(Tile("U", LETTER_VALUES), 4)
+        self.add_to_bag(Tile("V", LETTER_VALUES), 2)
+        self.add_to_bag(Tile("W", LETTER_VALUES), 2)
+        self.add_to_bag(Tile("X", LETTER_VALUES), 1)
+        self.add_to_bag(Tile("Y", LETTER_VALUES), 2)
+        self.add_to_bag(Tile("Z", LETTER_VALUES), 1)
         shuffle(self.bag)
 
     def take_from_bag(self):
@@ -132,6 +161,7 @@ class Player:
     def __init__(self, bag):
         self.name = ""
         self.rack = Rack(bag)
+        self.score = 0
 
     def set_name(self, name):
         #Sets the player's name.
@@ -144,6 +174,12 @@ class Player:
     def get_rack(self):
         #Returns the player's rack.
         return self.rack.get_rack_str()
+
+    def increase_score(self, increase):
+        self.score += increase
+
+    def get_score(self):
+        return self.score
 
 class Board:
     """
@@ -180,7 +216,7 @@ class Board:
         for coordinate in DOUBLE_LETTER_SCORE:
             self.board[coordinate[0]][coordinate[1]] = "DLS"
 
-    def play_word(self, word, location, direction):
+    def place_word(self, word, location, direction):
         #Allows you to play words, assuming that they have already been confirmed as valid.
         direction.lower()
         word = word.upper()
@@ -196,6 +232,8 @@ class Board:
 
 def check_word(word, location, player):
     #Checks the word to make sure that it is in the dictionary, and that the location falls within bounds.
+    global LETTER_VALUES
+    word_score = 0
     word = word.upper()
     dictionary = open("dic.txt").read()
     if word not in dictionary:
@@ -205,54 +243,64 @@ def check_word(word, location, player):
             return "You do not have the tiles for this word."
     if location[0] > 14 or location[1] > 14 or location[0] < 0 or location[1] < 0:
         return "Location out of bounds."
+
+    for letter in word:
+        word_score += LETTER_VALUES[letter]
+    player.increase_score(word_score)
     return True
 
 def turn(player, board):
     #Begins a turn, by displaying the current board, getting the information to play a turn, and creates a recursive loop to allow the next person to play.
-    global round_number, player1, player2
-    print("Round " + str(round_number) + ": " + player.get_name() + "'s turn \n")
+    global round_number, players
+    print("\nRound " + str(round_number) + ": " + player.get_name() + "'s turn \n")
     print(board.get_board())
     print("\n" + player.get_name() + "'s Letter Rack: " + player.rack.get_rack_str())
+
+    #Gets information in order to play a word.
     word_to_play = raw_input("Word to play: ")
     location = []
-    location.append(int(raw_input("Column number: "))
     location.append(int(raw_input("Row number: ")))
+    location.append(int(raw_input("Column number: ")))
     direction = raw_input("Direction of word (right or down): ")
-    while (check_word(word_to_play, location, player)) != True:
+
+    #If the first word throws an error, creates a recursive loop until the information is given correctly.
+    while check_word(word_to_play, location, player) != True:
         print (check_word(word_to_play, location, player))
         word_to_play = raw_input("Word to play: ")
         location = []
-        location.append(int(raw_input("Column number: "))
+        location.append(int(raw_input("Column number: ")))
         location.append(int(raw_input("Row number: ")))
         direction = raw_input("Direction of word (right or down): ")
-    board.play_word(word_to_play, tuple(map(int,location.split(','))), direction)
-    print(board.get_board())
-    if player == player1:
-        player = player2
-        turn(player, board)
-    elif player == player2:
-        player = player1
-        round_number += 1
-        turn(player, board)
-    #Implement scoring system
 
+    #Plays the correct word and prints the board.
+    board.place_word(word_to_play, location, direction)
+    print(board.get_board())
+    print(player.get_name() + "'s score is: " + str(player.get_score()))
+
+    if players.index(player) != (len(players)-1):
+        player = players[players.index(player)+1]
+    else:
+        player = players[0]
+        round_number += 1
+    turn(player, board)
 def start_game():
     #Begins the game and calls the turn function.
-    global round_number, player1, player2
+    global round_number, players
     board = Board()
 
     bag = Bag()
 
-    player1 = Player(bag)
-    player2 = Player(bag)
-    current_player = player1
-    round_number = 1
-
+    num_of_players = int(raw_input("Please enter the number of players (1-4): "))
+    if num_of_players < 2 or num_of_players > 4:
+        num_of_players = int(raw_input("This number is invalid. Please enter the number of players (2-4): "))
     print("Welcome to Scrabble! Please enter the names of the players below.")
-    player1.set_name(raw_input("Player 1: "))
-    player2.set_name(raw_input("Player 2: "))
-    print("Welcome " + player1.get_name() + " and " + player2.get_name() + "! Let's begin!")
+    players = []
+    for i in range(num_of_players):
+        players.append(Player(bag))
+        players[i].set_name(raw_input("Please enter player " + str(i+1) + "'s name: "))
 
+    round_number = 1
+    current_player = players[0]
     turn(current_player, board)
 
 start_game()
