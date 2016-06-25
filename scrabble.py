@@ -341,6 +341,7 @@ def start_game():
     turn(current_player, board)
 
 def end_game():
+    #Forces the game to end when the bag runs out of tiles.
     global players
     highest_score = 0
     winning_player = ""
@@ -355,4 +356,12 @@ start_game()
 """
 Things to do:
  - Create word overlaps
+    * ideas for implementation:
+        : Create a string that reads in all letters from the starting location to the ending location in current board
+        : Compare string to the <word> string. For all locations that they are the same, do not play/remove a tile.
+        : Word only throws error if there is a letter not on the current board AND not in the current player's rack.
+    * BONUS CHALLENGE:
+        : Whenever a word is played such that other words are created inadvertantly (see below for example.)
+        PARK - By placing these words on top of each other, PI, AL, RE and KA are inadvertantly created.
+        ILEA
 """
