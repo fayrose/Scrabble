@@ -1,8 +1,3 @@
-try:
-    import simplegui
-except ImportError:
-    import SimpleGUICS2Pygame.simpleguics2pygame as simplegui
-    simplegui.Frame._hide_status = True
 from random import shuffle
 
 """
@@ -51,13 +46,13 @@ class Tile:
             self.score = letter_values[self.letter]
         else:
             self.score = 0
-    def __str__(self):
+
+    def get_letter(self):
         return self.letter
 
     def get_score(self):
         #Returns the tile's score value.
         return self.score
-
 
 class Bag:
     """
@@ -122,23 +117,24 @@ class Rack:
     """
     def __init__(self, bag):
         self.rack = []
-        self.initialize(bag)
+        self.bag = bag
+        self.initialize()
 
-    def add_to_rack(self, bag):
+    def add_to_rack(self):
         #Takes a tile from the bag and adds it to the player's rack.
-        self.rack.append(bag.take_from_bag())
+        self.rack.append(self.bag.take_from_bag())
 
-    def initialize(self, bag):
+    def initialize(self):
         #Adds the initial 7 tiles to the player's hand.
         for i in range(7):
-            self.add_to_rack(bag)
+            self.add_to_rack()
 
     def get_rack_str(self):
         #Displays the user's rack in string form.
-        return ", ".join(str(item) for item in self.rack)
+        return ", ".join(str(item.get_letter()) for item in self.rack)
 
     def get_rack_arr(self):
-        #Returns the rack in the form of an array.
+        #Returns the rack as an array of tile instances
         return self.rack
 
     def remove_from_rack(self, tile):
@@ -151,8 +147,10 @@ class Rack:
 
     def replenish_rack(self):
         #Adds tiles to the rack after a turn such that the rack will have 7 tiles (assuming a proper number of tiles in the bag).
-        while self.get_rack_length < 7:
-            self.add_to_rack(bag)
+        while self.get_rack_length() < 7 and self.bag.get_remaining_tiles() > 0:
+            self.add_to_rack()
+        if self.bag.get_remaining_tiles() == 0:
+            end_game()
 
 class Player:
     """
@@ -171,9 +169,12 @@ class Player:
         #Gets the player's name.
         return self.name
 
-    def get_rack(self):
+    def get_rack_str(self):
         #Returns the player's rack.
         return self.rack.get_rack_str()
+
+    def get_rack_arr(self):
+        return self.rack.get_rack_arr()
 
     def increase_score(self, increase):
         self.score += increase
@@ -216,45 +217,74 @@ class Board:
         for coordinate in DOUBLE_LETTER_SCORE:
             self.board[coordinate[0]][coordinate[1]] = "DLS"
 
-    def place_word(self, word, location, direction):
+    def place_word(self, word, location, direction, player):
         #Allows you to play words, assuming that they have already been confirmed as valid.
+        global premium_spots
+        premium_spots = []
         direction.lower()
         word = word.upper()
         if direction == "right":
             for i in range(len(word)):
+                if self.board[location[0]][location[1]+i] != 0:
+                    premium_spots.append((word[i], self.board[location[0]][location[1]+i]))
                 self.board[location[0]][location[1]+i] = " " + word[i] + " "
         elif direction == "down":
             for i in range(len(word)):
+                if self.board[location[0]][location[1]+i] != 0:
+                    premium_spots.append((word[i], self.board[location[0]][location[1]+i]))
                 self.board[location[0]+i][location[1]] = " " + word[i] + " "
         else:
             print("Error: please enter a valid direction.")
-        #Remove letters from rack
+
+        #Removes tiles from player's rack and replaces them with tiles from the bag.
+        for letter in word:
+            for tile in player.get_rack_arr():
+                if tile.get_letter() == letter:
+                    player.rack.remove_from_rack(tile)
+        player.rack.replenish_rack()
 
 def check_word(word, location, player):
     #Checks the word to make sure that it is in the dictionary, and that the location falls within bounds.
-    global LETTER_VALUES
     word_score = 0
     word = word.upper()
     dictionary = open("dic.txt").read()
     if word not in dictionary:
         return "Please enter a valid dictionary word."
     for letter in word:
-        if letter not in player.get_rack():
+        if letter not in player.get_rack_str():
             return "You do not have the tiles for this word."
     if location[0] > 14 or location[1] > 14 or location[0] < 0 or location[1] < 0:
         return "Location out of bounds."
 
-    for letter in word:
-        word_score += LETTER_VALUES[letter]
-    player.increase_score(word_score)
     return True
+
+def calculate_word_score(word, player):
+    #Calculates the score of a word
+    global LETTER_VALUES, premium_spots
+    premium_spots = []
+    word = word.upper()
+    word_score = 0
+    for letter in word:
+        for spot in premium_spots:
+            if letter == spot[0]:
+                if spot[1] == "TLS":
+                    word_score += LETTER_VALUES[letter] * 2
+                elif spot[2] == "DLS":
+                    word_score += LETTER_VALUES[letter]
+        word_score += LETTER_VALUES[letter]
+    for spot in premium_spots:
+        if spot[1] == "TWS":
+            word_score *= 3
+        elif spot[1] == "DWS":
+            word_score *= 2
+    player.increase_score(word_score)
 
 def turn(player, board):
     #Begins a turn, by displaying the current board, getting the information to play a turn, and creates a recursive loop to allow the next person to play.
     global round_number, players
     print("\nRound " + str(round_number) + ": " + player.get_name() + "'s turn \n")
     print(board.get_board())
-    print("\n" + player.get_name() + "'s Letter Rack: " + player.rack.get_rack_str())
+    print("\n" + player.get_name() + "'s Letter Rack: " + player.get_rack_str())
 
     #Gets information in order to play a word.
     word_to_play = raw_input("Word to play: ")
@@ -273,7 +303,8 @@ def turn(player, board):
         direction = raw_input("Direction of word (right or down): ")
 
     #Plays the correct word and prints the board.
-    board.place_word(word_to_play, location, direction)
+    board.place_word(word_to_play, location, direction, player)
+    calculate_word_score(word_to_play, player)
     print(board.get_board())
     print(player.get_name() + "'s score is: " + str(player.get_score()))
 
@@ -283,6 +314,7 @@ def turn(player, board):
         player = players[0]
         round_number += 1
     turn(player, board)
+
 def start_game():
     #Begins the game and calls the turn function.
     global round_number, players
@@ -303,4 +335,20 @@ def start_game():
     current_player = players[0]
     turn(current_player, board)
 
+def end_game():
+    global players
+    highest_score = 0
+    winning_player = ""
+    for player in players:
+        if player.get_score > highest_score:
+            highest_score = player.get_score()
+            winning_player = player.get_name()
+    print("The game is over! " + player.get_name() + ", you have won!")
 start_game()
+
+"""
+Things to do:
+ - Force the first play of the game to place their word at 7,7
+ - Make the board display the column / row numbers
+ - Create word overlaps
+"""
