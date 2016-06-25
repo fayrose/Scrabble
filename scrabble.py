@@ -193,7 +193,7 @@ class Board:
 
     def get_board(self):
         #Returns the board in string form.
-        board_str = "  |  " + "  |  ".join(str(item) for item in range(10)) + "  | " + "  | ".join(str(item) for item in range(10, 15)) + " |"
+        board_str = "   |  " + "  |  ".join(str(item) for item in range(10)) + "  | " + "  | ".join(str(item) for item in range(10, 15)) + " |"
         board_str += "\n   _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n"
         board = list(self.board)
         for i in range(len(board)):
@@ -249,17 +249,19 @@ class Board:
 
 def check_word(word, location, player):
     #Checks the word to make sure that it is in the dictionary, and that the location falls within bounds.
+    global round_number, players
     word_score = 0
     word = word.upper()
     dictionary = open("dic.txt").read()
     if word not in dictionary:
-        return "Please enter a valid dictionary word."
+        return "Please enter a valid dictionary word.\n"
     for letter in word:
         if letter not in player.get_rack_str():
-            return "You do not have the tiles for this word."
+            return "You do not have the tiles for this word\n"
     if location[0] > 14 or location[1] > 14 or location[0] < 0 or location[1] < 0:
-        return "Location out of bounds."
-
+        return "Location out of bounds.\n"
+    if round_number == 1 and players[0] == player and location != [7,7]:
+        return "The first turn must begin at location (7, 7).\n"
     return True
 
 def calculate_word_score(word, player):
@@ -309,8 +311,7 @@ def turn(player, board):
     #Plays the correct word and prints the board.
     board.place_word(word_to_play, location, direction, player)
     calculate_word_score(word_to_play, player)
-    print(board.get_board())
-    print(player.get_name() + "'s score is: " + str(player.get_score()))
+    print("\n" + player.get_name() + "'s score is: " + str(player.get_score()))
 
     if players.index(player) != (len(players)-1):
         player = players[players.index(player)+1]
@@ -348,10 +349,10 @@ def end_game():
             highest_score = player.get_score()
             winning_player = player.get_name()
     print("The game is over! " + player.get_name() + ", you have won!")
+
 start_game()
 
 """
 Things to do:
- - Force the first play of the game to place their word at 7,7
  - Create word overlaps
 """
