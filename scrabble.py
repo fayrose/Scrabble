@@ -187,18 +187,22 @@ class Board:
     Creates the scrabble board.
     """
     def __init__(self):
-        self.board = [[" 0 " for i in range(15)] for j in range(15)]
+        self.board = [["   " for i in range(15)] for j in range(15)]
         self.add_premium_squares()
         self.board[7][7] = " * "
 
     def get_board(self):
         #Returns the board in string form.
-        board_str = "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n"
+        board_str = "  |  " + "  |  ".join(str(item) for item in range(10)) + "  | " + "  | ".join(str(item) for item in range(10, 15)) + " |"
+        board_str += "\n   _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n"
         board = list(self.board)
         for i in range(len(board)):
-            board[i] ="| " + " | ".join(str(item) for item in board[i]) + " |"
-        board_str += "\n|_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _|\n".join(board)
-        board_str += "\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _"
+            if i < 10:
+                board[i] = str(i) + "  | " + " | ".join(str(item) for item in board[i]) + " |"
+            if i >= 10:
+                board[i] = str(i) + " | " + " | ".join(str(item) for item in board[i]) + " |"
+        board_str += "\n   |_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _|\n".join(board)
+        board_str += "\n   _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _"
         return board_str
 
     def add_premium_squares(self):
@@ -349,6 +353,5 @@ start_game()
 """
 Things to do:
  - Force the first play of the game to place their word at 7,7
- - Make the board display the column / row numbers
  - Create word overlaps
 """
