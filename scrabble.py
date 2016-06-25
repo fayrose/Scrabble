@@ -285,7 +285,7 @@ def calculate_word_score(word, player):
             word_score *= 2
     player.increase_score(word_score)
 
-def turn(player, board):
+def turn(player, board, bag):
     #Begins a turn, by displaying the current board, getting the information to play a turn, and creates a recursive loop to allow the next person to play.
     global round_number, players
     print("\nRound " + str(round_number) + ": " + player.get_name() + "'s turn \n")
@@ -318,7 +318,8 @@ def turn(player, board):
     else:
         player = players[0]
         round_number += 1
-    turn(player, board)
+    if bag.get_remaining_tiles() > 0:
+        turn(player, board, bag)
 
 def start_game():
     #Begins the game and calls the turn function.
@@ -338,7 +339,7 @@ def start_game():
 
     round_number = 1
     current_player = players[0]
-    turn(current_player, board)
+    turn(current_player, board, bag)
 
 def end_game():
     #Forces the game to end when the bag runs out of tiles.
@@ -364,4 +365,9 @@ Things to do:
         : Whenever a word is played such that other words are created inadvertantly (see below for example.)
         PARK - By placing these words on top of each other, PI, AL, RE and KA are inadvertantly created.
         ILEA
+  - Add in blank tiles
+  - Rework the end_game() method such that the game ends according to American rules:
+    * The game ends either when
+        : 6 consecutive scoreless turns have occured
+        : There are no more tiles left in the bag, and one player has run out of tiles
 """
