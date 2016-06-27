@@ -35,6 +35,7 @@ LETTER_VALUES = {"A": 1,
                  "X": 8,
                  "Y": 4,
                  "Z": 10}
+
 class Tile:
     """
     Class that allows for the creation of a tile. Initializes using an uppercase string of one letter,
@@ -227,16 +228,14 @@ class Board:
         word = word.upper()
         if direction == "right":
             for i in range(len(word)):
-                if self.board[location[0]][location[1]+i] != 0:
+                if self.board[location[0]][location[1]+i] != "   ":
                     premium_spots.append((word[i], self.board[location[0]][location[1]+i]))
                 self.board[location[0]][location[1]+i] = " " + word[i] + " "
         elif direction == "down":
             for i in range(len(word)):
-                if self.board[location[0]][location[1]+i] != 0:
+                if self.board[location[0]][location[1]+i] != "   ":
                     premium_spots.append((word[i], self.board[location[0]][location[1]+i]))
                 self.board[location[0]+i][location[1]] = " " + word[i] + " "
-        else:
-            print("Error: please enter a valid direction.")
 
         #Removes tiles from player's rack and replaces them with tiles from the bag.
         for letter in word:
@@ -245,18 +244,52 @@ class Board:
                     player.rack.remove_from_rack(tile)
         player.rack.replenish_rack()
 
-def check_word(word, location, player):
+    def board_array(self):
+        return self.board
+
+def check_word(word, location, player, direction, board):
     #Checks the word to make sure that it is in the dictionary, and that the location falls within bounds.
+    #Also controls the overlapping of words.
     global round_number, players
     word_score = 0
     word = word.upper()
     dictionary = open("dic.txt").read()
+
+    current_board_ltr = ""
+    needed_tiles = ""
     if word != "":
+        if direction == "right":
+            for i in range(len(word)):
+                if board[location[0]][location[1]+i][1] == " " or board[location[0]][location[1]+i] == "TLS" or board[location[0]][location[1]+i] == "TWS" or board[location[0]][location[1]+i] == "DLS" or board[location[0]][location[1]+i] == "DWS" or board[location[0]][location[1]+i][1] == "*":
+                    current_board_ltr += " "
+                else:
+                    current_board_ltr += board[location[0]][location[1]+i][1]
+        elif direction == "down":
+            for i in range(len(word)):
+                if board[location[0]+i][location[1]][1] == " " or board[location[0]+i][location[1]] == "TLS" or board[location[0]+i][location[1]] == "TWS" or board[location[0]+i][location[1]] == "DLS" or board[location[0]+i][location[1]] == "DWS" or board[location[0]+i][location[1]][1] == "*":
+                    current_board_ltr += " "
+                else:
+                    current_board_ltr += board[location[0]][location[1]+i][1]
+        else:
+            return "Error: please enter a valid direction."
+
         if word not in dictionary:
             return "Please enter a valid dictionary word.\n"
-        for letter in word:
+
+        for i in range(len(word)):
+            if current_board_ltr[i] == " ":
+                needed_tiles += word[i]
+            elif current_board_ltr[i] != word[i]:
+                return "The letters do not overlap correctly, please choose another word."
+                #print("Current_board_ltr: " + str(current_board_ltr) + ", Word: " + word + ", Needed_Tiles: " + needed_tiles)
+
+        if (round_number != 1 or (round_number == 1 and players[0] != player)) and current_board_ltr == " " * len(word):
+            return "Please connect the word to a previously played letter."
+
+        for letter in needed_tiles:
             if letter not in player.get_rack_str():
                 return "You do not have the tiles for this word\n"
+
         if location[0] > 14 or location[1] > 14 or location[0] < 0 or location[1] < 0:
             return "Location out of bounds.\n"
         if round_number == 1 and players[0] == player and location != [7,7]:
@@ -305,12 +338,12 @@ def turn(player, board, bag):
         if (col == "" or row == ""):
             location = [-1, -1]
         else:
-            location = [int(col), int(row)]
+            location = [int(row), int(col)]
         direction = raw_input("Direction of word (right or down): ")
 
         #If the first word throws an error, creates a recursive loop until the information is given correctly.
-        while check_word(word_to_play, location, player) != True:
-            print (check_word(word_to_play, location, player))
+        while check_word(word_to_play, location, player, direction, board.board_array()) != True:
+            print (check_word(word_to_play, location, player, direction, board.board_array()))
             word_to_play = raw_input("Word to play: ")
             location = []
             col = raw_input("Column number: ")
@@ -318,7 +351,7 @@ def turn(player, board, bag):
             if (col == "" or row == ""):
                 location = [-1, -1]
             else:
-                location = [int(col), int(row)]
+                location = [int(row), int(col)]
             direction = raw_input("Direction of word (right or down): ")
 
         if word_to_play == "":
@@ -348,8 +381,8 @@ def start_game():
     board = Board()
     bag = Bag()
 
-    num_of_players = int(raw_input("Please enter the number of players (1-4): "))
-    if num_of_players < 2 or num_of_players > 4:
+    num_of_players = int(raw_input("\nPlease enter the number of players (2-4): "))
+    while num_of_players < 2 or num_of_players > 4:
         num_of_players = int(raw_input("This number is invalid. Please enter the number of players (2-4): "))
     print("Welcome to Scrabble! Please enter the names of the players below.")
     players = []
@@ -377,15 +410,9 @@ start_game()
 
 """
 Things to do:
- - Create word overlaps
-    * ideas for implementation:
-        : Create a string that reads in all letters from the starting location to the ending location in current board
-        : Compare string to the <word> string. For all locations that they are the same, do not play/remove a tile.
-        : Word only throws error if there is a letter not on the current board AND not in the current player's rack.
-    * BONUS CHALLENGE:
-        : Whenever a word is played such that other words are created inadvertantly (see below for example.)
-        PARK - By placing these words on top of each other, PI, AL, RE and KA are inadvertantly created.
-        ILEA
+ -Whenever a word is played such that other words are created inadvertantly (see below for example.)
+  - PARK - By placing these words on top of each other, PI, AL, RE and KA are inadvertantly created.
+    ILEA
   - Add in blank tiles
   - Create a GUI version of the game
   - Create an AI such that a 1 player game is possible
