@@ -149,8 +149,6 @@ class Rack:
         #Adds tiles to the rack after a turn such that the rack will have 7 tiles (assuming a proper number of tiles in the bag).
         while self.get_rack_length() < 7 and self.bag.get_remaining_tiles() > 0:
             self.add_to_rack()
-        if self.bag.get_remaining_tiles() == 0:
-            end_game()
 
 class Player:
     """
@@ -253,16 +251,22 @@ def check_word(word, location, player):
     word_score = 0
     word = word.upper()
     dictionary = open("dic.txt").read()
-    if word not in dictionary:
-        return "Please enter a valid dictionary word.\n"
-    for letter in word:
-        if letter not in player.get_rack_str():
-            return "You do not have the tiles for this word\n"
-    if location[0] > 14 or location[1] > 14 or location[0] < 0 or location[1] < 0:
-        return "Location out of bounds.\n"
-    if round_number == 1 and players[0] == player and location != [7,7]:
-        return "The first turn must begin at location (7, 7).\n"
-    return True
+    if word != "":
+        if word not in dictionary:
+            return "Please enter a valid dictionary word.\n"
+        for letter in word:
+            if letter not in player.get_rack_str():
+                return "You do not have the tiles for this word\n"
+        if location[0] > 14 or location[1] > 14 or location[0] < 0 or location[1] < 0:
+            return "Location out of bounds.\n"
+        if round_number == 1 and players[0] == player and location != [7,7]:
+            return "The first turn must begin at location (7, 7).\n"
+        return True
+    else:
+        if raw_input("Are you sure you would like to skip your turn? (y/n)").upper() == "Y":
+            return True
+        else:
+            return "Please enter a word."
 
 def calculate_word_score(word, player):
     #Calculates the score of a word
@@ -287,45 +291,61 @@ def calculate_word_score(word, player):
 
 def turn(player, board, bag):
     #Begins a turn, by displaying the current board, getting the information to play a turn, and creates a recursive loop to allow the next person to play.
-    global round_number, players
-    print("\nRound " + str(round_number) + ": " + player.get_name() + "'s turn \n")
-    print(board.get_board())
-    print("\n" + player.get_name() + "'s Letter Rack: " + player.get_rack_str())
+    global round_number, players, skipped_turns
+    if (skipped_turns < 6) or (player.rack.get_rack_length() == 0 and bag.get_remaining_tiles() == 0):
+        print("\nRound " + str(round_number) + ": " + player.get_name() + "'s turn \n")
+        print(board.get_board())
+        print("\n" + player.get_name() + "'s Letter Rack: " + player.get_rack_str())
 
-    #Gets information in order to play a word.
-    word_to_play = raw_input("Word to play: ")
-    location = []
-    location.append(int(raw_input("Row number: ")))
-    location.append(int(raw_input("Column number: ")))
-    direction = raw_input("Direction of word (right or down): ")
-
-    #If the first word throws an error, creates a recursive loop until the information is given correctly.
-    while check_word(word_to_play, location, player) != True:
-        print (check_word(word_to_play, location, player))
+        #Gets information in order to play a word.
         word_to_play = raw_input("Word to play: ")
         location = []
-        location.append(int(raw_input("Column number: ")))
-        location.append(int(raw_input("Row number: ")))
+        col = raw_input("Column number: ")
+        row = raw_input("Row number: ")
+        if (col == "" or row == ""):
+            location = [-1, -1]
+        else:
+            location = [int(col), int(row)]
         direction = raw_input("Direction of word (right or down): ")
 
-    #Plays the correct word and prints the board.
-    board.place_word(word_to_play, location, direction, player)
-    calculate_word_score(word_to_play, player)
-    print("\n" + player.get_name() + "'s score is: " + str(player.get_score()))
+        #If the first word throws an error, creates a recursive loop until the information is given correctly.
+        while check_word(word_to_play, location, player) != True:
+            print (check_word(word_to_play, location, player))
+            word_to_play = raw_input("Word to play: ")
+            location = []
+            col = raw_input("Column number: ")
+            row = raw_input("Row number: ")
+            if (col == "" or row == ""):
+                location = [-1, -1]
+            else:
+                location = [int(col), int(row)]
+            direction = raw_input("Direction of word (right or down): ")
 
-    if players.index(player) != (len(players)-1):
-        player = players[players.index(player)+1]
+        if word_to_play == "":
+            print("Your turn has been skipped.")
+            skipped_turns += 1
+        else:
+        #Plays the correct word and prints the board.
+            board.place_word(word_to_play, location, direction, player)
+            calculate_word_score(word_to_play, player)
+            skipped_turns = 0
+
+        print("\n" + player.get_name() + "'s score is: " + str(player.get_score()))
+
+        if players.index(player) != (len(players)-1):
+            player = players[players.index(player)+1]
+        else:
+            player = players[0]
+            round_number += 1
+        if bag.get_remaining_tiles() > 0:
+            turn(player, board, bag)
     else:
-        player = players[0]
-        round_number += 1
-    if bag.get_remaining_tiles() > 0:
-        turn(player, board, bag)
+        end_game()
 
 def start_game():
     #Begins the game and calls the turn function.
-    global round_number, players
+    global round_number, players, skipped_turns
     board = Board()
-
     bag = Bag()
 
     num_of_players = int(raw_input("Please enter the number of players (1-4): "))
@@ -338,6 +358,7 @@ def start_game():
         players[i].set_name(raw_input("Please enter player " + str(i+1) + "'s name: "))
 
     round_number = 1
+    skipped_turns = 0
     current_player = players[0]
     turn(current_player, board, bag)
 
@@ -366,8 +387,6 @@ Things to do:
         PARK - By placing these words on top of each other, PI, AL, RE and KA are inadvertantly created.
         ILEA
   - Add in blank tiles
-  - Rework the end_game() method such that the game ends according to American rules:
-    * The game ends either when
-        : 6 consecutive scoreless turns have occured
-        : There are no more tiles left in the bag, and one player has run out of tiles
+  - Create a GUI version of the game
+  - Create an AI such that a 1 player game is possible
 """
