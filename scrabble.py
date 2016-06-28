@@ -34,7 +34,8 @@ LETTER_VALUES = {"A": 1,
                  "W": 4,
                  "X": 8,
                  "Y": 4,
-                 "Z": 10}
+                 "Z": 10,
+                 "#": 0}
 
 class Tile:
     """
@@ -102,6 +103,7 @@ class Bag:
         self.add_to_bag(Tile("X", LETTER_VALUES), 1)
         self.add_to_bag(Tile("Y", LETTER_VALUES), 2)
         self.add_to_bag(Tile("Z", LETTER_VALUES), 1)
+        self.add_to_bag(Tile("#", LETTER_VALUES), 2)
         shuffle(self.bag)
 
     def take_from_bag(self):
@@ -257,7 +259,13 @@ def check_word(word, location, player, direction, board):
 
     current_board_ltr = ""
     needed_tiles = ""
+    blank_tile_val = ""
     if word != "":
+        if "#" in word:
+            while len(blank_tile_val) != 1:
+                blank_tile_val = raw_input("Please enter the letter value of the blank tile.")
+            word[word.index("#")] = blank_tile_val.upper()
+
         if direction == "right":
             for i in range(len(word)):
                 if board[location[0]][location[1]+i][1] == " " or board[location[0]][location[1]+i] == "TLS" or board[location[0]][location[1]+i] == "TWS" or board[location[0]][location[1]+i] == "DLS" or board[location[0]][location[1]+i] == "DWS" or board[location[0]][location[1]+i][1] == "*":
@@ -290,7 +298,7 @@ def check_word(word, location, player, direction, board):
             if letter not in player.get_rack_str():
                 return "You do not have the tiles for this word\n"
 
-        if location[0] > 14 or location[1] > 14 or location[0] < 0 or location[1] < 0:
+        if location[0] > 14 or location[1] > 14 or location[0] < 0 or location[1] < 0 or (location[0]+len(word)) > 14 or (location[1]+len(word)) > 14 or (location[0]+len(word)) < 0 or (location[1]+len(word)) < 0:
             return "Location out of bounds.\n"
         if round_number == 1 and players[0] == player and location != [7,7]:
             return "The first turn must begin at location (7, 7).\n"
@@ -407,13 +415,3 @@ def end_game():
     print("The game is over! " + player.get_name() + ", you have won!")
 
 start_game()
-
-"""
-Things to do:
- -Whenever a word is played such that other words are created inadvertantly (see below for example.)
-  - PARK - By placing these words on top of each other, PI, AL, RE and KA are inadvertantly created.
-    ILEA
-  - Add in blank tiles
-  - Create a GUI version of the game
-  - Create an AI such that a 1 player game is possible
-"""
