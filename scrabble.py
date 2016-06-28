@@ -263,16 +263,16 @@ def check_word(word, location, player, direction, board):
     if word != "":
         if "#" in word:
             while len(blank_tile_val) != 1:
-                blank_tile_val = raw_input("Please enter the letter value of the blank tile.")
-            word[word.index("#")] = blank_tile_val.upper()
+                blank_tile_val = raw_input("Please enter the letter value of the blank tile: ")
+            word = word[:word.index("#")] + blank_tile_val.upper() + word[(word.index("#")+1):]
 
-        if direction == "right":
+        if direction.lower() == "right":
             for i in range(len(word)):
                 if board[location[0]][location[1]+i][1] == " " or board[location[0]][location[1]+i] == "TLS" or board[location[0]][location[1]+i] == "TWS" or board[location[0]][location[1]+i] == "DLS" or board[location[0]][location[1]+i] == "DWS" or board[location[0]][location[1]+i][1] == "*":
                     current_board_ltr += " "
                 else:
                     current_board_ltr += board[location[0]][location[1]+i][1]
-        elif direction == "down":
+        elif direction.lower() == "down":
             for i in range(len(word)):
                 if board[location[0]+i][location[1]][1] == " " or board[location[0]+i][location[1]] == "TLS" or board[location[0]+i][location[1]] == "TWS" or board[location[0]+i][location[1]] == "DLS" or board[location[0]+i][location[1]] == "DWS" or board[location[0]+i][location[1]][1] == "*":
                     current_board_ltr += " "
@@ -298,7 +298,7 @@ def check_word(word, location, player, direction, board):
             if letter not in player.get_rack_str():
                 return "You do not have the tiles for this word\n"
 
-        if location[0] > 14 or location[1] > 14 or location[0] < 0 or location[1] < 0 or (location[0]+len(word)) > 14 or (location[1]+len(word)) > 14 or (location[0]+len(word)) < 0 or (location[1]+len(word)) < 0:
+        if location[0] > 14 or location[1] > 14 or location[0] < 0 or location[1] < 0 or (direction.lower() == "down" and (location[0]+len(word)-1) > 14) or (direction.lower() == "right" and (location[1]+len(word)-1) > 14):
             return "Location out of bounds.\n"
         if round_number == 1 and players[0] == player and location != [7,7]:
             return "The first turn must begin at location (7, 7).\n"
