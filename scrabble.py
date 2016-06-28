@@ -482,4 +482,6 @@ def end_game():
             winning_player = player.get_name()
     print("The game is over! " + player.get_name() + ", you have won!")
 
+    if raw_input("\nWould you like to play again? (y/n)").upper() == "Y":
+        start_game()
 start_game()
