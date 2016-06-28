@@ -274,10 +274,10 @@ def check_word(word, location, player, direction, board):
                     current_board_ltr += board[location[0]][location[1]+i][1]
         elif direction.lower() == "down":
             for i in range(len(word)):
-                if board[location[0]+i][location[1]][1] == " " or board[location[0]+i][location[1]] == "TLS" or board[location[0]+i][location[1]] == "TWS" or board[location[0]+i][location[1]] == "DLS" or board[location[0]+i][location[1]] == "DWS" or board[location[0]+i][location[1]][1] == "*":
+                if board[location[0]+i][location[1]] == "   " or board[location[0]+i][location[1]] == "TLS" or board[location[0]+i][location[1]] == "TWS" or board[location[0]+i][location[1]] == "DLS" or board[location[0]+i][location[1]] == "DWS" or board[location[0]+i][location[1]] == " * ":
                     current_board_ltr += " "
                 else:
-                    current_board_ltr += board[location[0]][location[1]+i][1]
+                    current_board_ltr += board[location[0]+i][location[1]][1]
         else:
             return "Error: please enter a valid direction."
 
@@ -288,15 +288,19 @@ def check_word(word, location, player, direction, board):
             if current_board_ltr[i] == " ":
                 needed_tiles += word[i]
             elif current_board_ltr[i] != word[i]:
+                print("Current_board_ltr: " + str(current_board_ltr) + ", Word: " + word + ", Needed_Tiles: " + needed_tiles)
                 return "The letters do not overlap correctly, please choose another word."
-                #print("Current_board_ltr: " + str(current_board_ltr) + ", Word: " + word + ", Needed_Tiles: " + needed_tiles)
+
+        if blank_tile_val != "":
+            needed_tiles = needed_tiles[needed_tiles.index(blank_tile_val):] + needed_tiles[:needed_tiles.index(blank_tile_val)]
 
         if (round_number != 1 or (round_number == 1 and players[0] != player)) and current_board_ltr == " " * len(word):
+            print("Current_board_ltr: " + str(current_board_ltr) + ", Word: " + word + ", Needed_Tiles: " + needed_tiles)
             return "Please connect the word to a previously played letter."
-
         for letter in needed_tiles:
-            if letter not in player.get_rack_str():
+            if letter not in player.get_rack_str() or player.get_rack_str().count(letter) < needed_tiles.count(letter):
                 return "You do not have the tiles for this word\n"
+
 
         if location[0] > 14 or location[1] > 14 or location[0] < 0 or location[1] < 0 or (direction.lower() == "down" and (location[0]+len(word)-1) > 14) or (direction.lower() == "right" and (location[1]+len(word)-1) > 14):
             return "Location out of bounds.\n"
