@@ -484,4 +484,5 @@ def end_game():
 
     if raw_input("\nWould you like to play again? (y/n)").upper() == "Y":
         start_game()
+
 start_game()
