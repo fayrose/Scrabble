@@ -9,6 +9,7 @@ Bag - keeps track of the remaining tiles in the bag
 Word - checks the validity of a word and its placement
 Board - keeps track of the tiles' location on the board
 """
+#Keeps track of the score-worth of each letter-tile.
 LETTER_VALUES = {"A": 1,
                  "B": 3,
                  "C": 3,
@@ -43,6 +44,7 @@ class Tile:
     and an integer representing that letter's score.
     """
     def __init__(self, letter, letter_values):
+        #Initializes the tile class. Takes the letter as a string, and the dictionary of letter values as arguments.
         self.letter = letter.upper()
         if self.letter in letter_values:
             self.score = letter_values[self.letter]
@@ -50,6 +52,7 @@ class Tile:
             self.score = 0
 
     def get_letter(self):
+        #Returns the tile's letter (string).
         return self.letter
 
     def get_score(self):
@@ -62,12 +65,10 @@ class Bag:
     Takes no arguments to initialize.
     """
     def __init__(self):
+        #Creates the bag full of game tiles, and calls the initialize_bag() method, which adds the default 100 tiles to the bag.
+        #Takes no arguments.
         self.bag = []
         self.initialize_bag()
-
-    def __str__(self):
-        for line in self.bag:
-            "\n"
 
     def add_to_bag(self, tile, quantity):
         #Adds a certain quantity of a certain tile to the bag. Takes a tile and an integer quantity as arguments.
@@ -119,6 +120,7 @@ class Rack:
     Creates each player's 'dock', or 'hand'. Allows players to add, remove and replenish the number of tiles in their hand.
     """
     def __init__(self, bag):
+        #Initializes the player's rack/hand. Takes the bag from which the racks tiles will come as an argument.
         self.rack = []
         self.bag = bag
         self.initialize()
@@ -158,6 +160,8 @@ class Player:
     Creates an instance of a player. Initializes the player's rack, and allows you to set/get a player name.
     """
     def __init__(self, bag):
+        #Intializes a player instance. Creates the player's rack by creating an instance of that class.
+        #Takes the bag as an argument, in order to create the rack.
         self.name = ""
         self.rack = Rack(bag)
         self.score = 0
@@ -175,12 +179,15 @@ class Player:
         return self.rack.get_rack_str()
 
     def get_rack_arr(self):
+        #Returns the player's rack in the form of an array.
         return self.rack.get_rack_arr()
 
     def increase_score(self, increase):
+        #Increases the player's score by a certain amount. Takes the increase (int) as an argument and adds it to the score.
         self.score += increase
 
     def get_score(self):
+        #Returns the player's score
         return self.score
 
 class Board:
@@ -188,6 +195,7 @@ class Board:
     Creates the scrabble board.
     """
     def __init__(self):
+        #Creates a 2-dimensional array that will serve as the board, as well as adds in the premium squares.
         self.board = [["   " for i in range(15)] for j in range(15)]
         self.add_premium_squares()
         self.board[7][7] = " * "
@@ -228,12 +236,16 @@ class Board:
         premium_spots = []
         direction.lower()
         word = word.upper()
-        if direction == "right":
+
+        #Places the word going rightwards
+        if direction.lower() == "right":
             for i in range(len(word)):
                 if self.board[location[0]][location[1]+i] != "   ":
                     premium_spots.append((word[i], self.board[location[0]][location[1]+i]))
                 self.board[location[0]][location[1]+i] = " " + word[i] + " "
-        elif direction == "down":
+
+        #Places the word going downwards
+        elif direction.lower() == "down":
             for i in range(len(word)):
                 if self.board[location[0]][location[1]+i] != "   ":
                     premium_spots.append((word[i], self.board[location[0]][location[1]+i]))
@@ -247,6 +259,7 @@ class Board:
         player.rack.replenish_rack()
 
     def board_array(self):
+        #Returns the 2-dimensional board array.
         return self.board
 
 def check_word(word, location, player, direction, board):
@@ -260,12 +273,17 @@ def check_word(word, location, player, direction, board):
     current_board_ltr = ""
     needed_tiles = ""
     blank_tile_val = ""
+
+    #Assuming that the player is not skipping the turn:
     if word != "":
+
+        #Allows for players to declare the value of a blank tile.
         if "#" in word:
             while len(blank_tile_val) != 1:
                 blank_tile_val = raw_input("Please enter the letter value of the blank tile: ")
             word = word[:word.index("#")] + blank_tile_val.upper() + word[(word.index("#")+1):]
 
+        #Reads in the board's current values under where the word that is being played will go. Raises an error if the direction is not valid.
         if direction.lower() == "right":
             for i in range(len(word)):
                 if board[location[0]][location[1]+i][1] == " " or board[location[0]][location[1]+i] == "TLS" or board[location[0]][location[1]+i] == "TWS" or board[location[0]][location[1]+i] == "DLS" or board[location[0]][location[1]+i] == "DWS" or board[location[0]][location[1]+i][1] == "*":
@@ -281,9 +299,11 @@ def check_word(word, location, player, direction, board):
         else:
             return "Error: please enter a valid direction."
 
+        #Raises an error if the word being played is not in the official scrabble dictionary (dic.txt).
         if word not in dictionary:
             return "Please enter a valid dictionary word.\n"
 
+        #Ensures that the words overlap correctly. If there are conflicting letters between the current board and the word being played, raises an error.
         for i in range(len(word)):
             if current_board_ltr[i] == " ":
                 needed_tiles += word[i]
@@ -291,22 +311,30 @@ def check_word(word, location, player, direction, board):
                 print("Current_board_ltr: " + str(current_board_ltr) + ", Word: " + word + ", Needed_Tiles: " + needed_tiles)
                 return "The letters do not overlap correctly, please choose another word."
 
+        #If there is a blank tile, remove it's given value from the tiles needed to play the word.
         if blank_tile_val != "":
             needed_tiles = needed_tiles[needed_tiles.index(blank_tile_val):] + needed_tiles[:needed_tiles.index(blank_tile_val)]
 
+        #Ensures that the word will be connected to other words on the playing board.
         if (round_number != 1 or (round_number == 1 and players[0] != player)) and current_board_ltr == " " * len(word):
             print("Current_board_ltr: " + str(current_board_ltr) + ", Word: " + word + ", Needed_Tiles: " + needed_tiles)
             return "Please connect the word to a previously played letter."
+
+        #Raises an error if the player does not have the correct tiles to play the word.
         for letter in needed_tiles:
             if letter not in player.get_rack_str() or player.get_rack_str().count(letter) < needed_tiles.count(letter):
                 return "You do not have the tiles for this word\n"
 
-
+        #Raises an error if the location of the word will be out of bounds.
         if location[0] > 14 or location[1] > 14 or location[0] < 0 or location[1] < 0 or (direction.lower() == "down" and (location[0]+len(word)-1) > 14) or (direction.lower() == "right" and (location[1]+len(word)-1) > 14):
             return "Location out of bounds.\n"
+
+        #Ensures that first turn of the game will have the word placed at (7,7).
         if round_number == 1 and players[0] == player and location != [7,7]:
             return "The first turn must begin at location (7, 7).\n"
         return True
+
+    #If the user IS skipping the turn, confirm. If the user replies with "Y", skip the player's turn. Otherwise, allow the user to enter another word.
     else:
         if raw_input("Are you sure you would like to skip your turn? (y/n)").upper() == "Y":
             return True
@@ -314,7 +342,7 @@ def check_word(word, location, player, direction, board):
             return "Please enter a word."
 
 def calculate_word_score(word, player):
-    #Calculates the score of a word
+    #Calculates the score of a word, allowing for the impact by premium squares.
     global LETTER_VALUES, premium_spots
     premium_spots = []
     word = word.upper()
@@ -337,7 +365,12 @@ def calculate_word_score(word, player):
 def turn(player, board, bag):
     #Begins a turn, by displaying the current board, getting the information to play a turn, and creates a recursive loop to allow the next person to play.
     global round_number, players, skipped_turns
+
+    #If the number of skipped turns is less than 6 and a row, and there are either tiles in the bag, or no players have run out of tiles, play the turn.
+    #Otherwise, end the game.
     if (skipped_turns < 6) or (player.rack.get_rack_length() == 0 and bag.get_remaining_tiles() == 0):
+
+        #Displays whose turn it is, the current board, and the player's rack.
         print("\nRound " + str(round_number) + ": " + player.get_name() + "'s turn \n")
         print(board.get_board())
         print("\n" + player.get_name() + "'s Letter Rack: " + player.get_rack_str())
@@ -366,24 +399,31 @@ def turn(player, board, bag):
                 location = [int(row), int(col)]
             direction = raw_input("Direction of word (right or down): ")
 
+        #If the user has confirmed that they would like to skip their turn, skip it.
+        #Otherwise, plays the correct word and prints the board.
         if word_to_play == "":
             print("Your turn has been skipped.")
             skipped_turns += 1
         else:
-        #Plays the correct word and prints the board.
+
             board.place_word(word_to_play, location, direction, player)
             calculate_word_score(word_to_play, player)
             skipped_turns = 0
 
+        #Prints the current player's score
         print("\n" + player.get_name() + "'s score is: " + str(player.get_score()))
 
+        #Gets the next player.
         if players.index(player) != (len(players)-1):
             player = players[players.index(player)+1]
         else:
             player = players[0]
             round_number += 1
-        if bag.get_remaining_tiles() > 0:
-            turn(player, board, bag)
+
+        #Recursively calls the function in order to play the next turn.
+        turn(player, board, bag)
+
+    #If the number of skipped turns is over 6 or the bag has both run out of tiles and a player is out of tiles, end the game.
     else:
         end_game()
 
@@ -393,15 +433,19 @@ def start_game():
     board = Board()
     bag = Bag()
 
+    #Asks the player for the number of players.
     num_of_players = int(raw_input("\nPlease enter the number of players (2-4): "))
     while num_of_players < 2 or num_of_players > 4:
         num_of_players = int(raw_input("This number is invalid. Please enter the number of players (2-4): "))
-    print("Welcome to Scrabble! Please enter the names of the players below.")
+
+    #Welcomes players to the game and allows players to choose their name.
+    print("\nWelcome to Scrabble! Please enter the names of the players below.")
     players = []
     for i in range(num_of_players):
         players.append(Player(bag))
         players[i].set_name(raw_input("Please enter player " + str(i+1) + "'s name: "))
 
+    #Sets the default value of global variables.
     round_number = 1
     skipped_turns = 0
     current_player = players[0]
