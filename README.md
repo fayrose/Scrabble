@@ -1,6 +1,10 @@
 # Scrabble
 Command line scrabble game written in python. 
 
+## In order to run the game:
+Please navigate to the correct folder in your file system, and run `python scrabble.py`.
+Please ensure that you have `python` in your `PATH`, and that it refers to Python 3.5. This file will not run in Python 2.7.
+
 ##How to play:
 
 The game is a multiplayer one, designed to be played by between 2 and 4 players on the computer.
