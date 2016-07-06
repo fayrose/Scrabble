@@ -287,7 +287,7 @@ class Word:
             #Allows for players to declare the value of a blank tile.
             if "#" in self.word:
                 while len(blank_tile_val) != 1:
-                    blank_tile_val = raw_input("Please enter the letter value of the blank tile: ")
+                    blank_tile_val = input("Please enter the letter value of the blank tile: ")
                 self.word = self.word[:word.index("#")] + blank_tile_val.upper() + self.word[(word.index("#")+1):]
 
             #Reads in the board's current values under where the word that is being played will go. Raises an error if the direction is not valid.
@@ -343,7 +343,7 @@ class Word:
 
         #If the user IS skipping the turn, confirm. If the user replies with "Y", skip the player's turn. Otherwise, allow the user to enter another word.
         else:
-            if raw_input("Are you sure you would like to skip your turn? (y/n)").upper() == "Y":
+            if input("Are you sure you would like to skip your turn? (y/n)").upper() == "Y":
                 return True
             else:
                 return "Please enter a word."
@@ -394,30 +394,30 @@ def turn(player, board, bag):
         print("\n" + player.get_name() + "'s Letter Rack: " + player.get_rack_str())
 
         #Gets information in order to play a word.
-        word_to_play = raw_input("Word to play: ")
+        word_to_play = input("Word to play: ")
         location = []
-        col = raw_input("Column number: ")
-        row = raw_input("Row number: ")
+        col = input("Column number: ")
+        row = input("Row number: ")
         if (col == "" or row == "") or (col not in [str(x) for x in range(15)] or row not in [str(x) for x in range(15)]):
             location = [-1, -1]
         else:
             location = [int(row), int(col)]
-        direction = raw_input("Direction of word (right or down): ")
+        direction = input("Direction of word (right or down): ")
 
         word = Word(word_to_play, location, player, direction, board.board_array())
 
         #If the first word throws an error, creates a recursive loop until the information is given correctly.
         while word.check_word() != True:
             print (word.check_word())
-            word.set_word(raw_input("Word to play: "))
+            word.set_word(input("Word to play: "))
             location = []
-            col = raw_input("Column number: ")
-            row = raw_input("Row number: ")
+            col = input("Column number: ")
+            row = input("Row number: ")
             if (col == "" or row == "") or (col not in [str(x) for x in range(15)] or row not in [str(x) for x in range(15)]):
                 location = [-1, -1]
             else:
                 word.set_location([int(row), int(col)])
-            word.set_direction(raw_input("Direction of word (right or down): "))
+            word.set_direction(input("Direction of word (right or down): "))
 
         #If the user has confirmed that they would like to skip their turn, skip it.
         #Otherwise, plays the correct word and prints the board.
@@ -454,16 +454,16 @@ def start_game():
     bag = Bag()
 
     #Asks the player for the number of players.
-    num_of_players = int(raw_input("\nPlease enter the number of players (2-4): "))
+    num_of_players = int(input("\nPlease enter the number of players (2-4): "))
     while num_of_players < 2 or num_of_players > 4:
-        num_of_players = int(raw_input("This number is invalid. Please enter the number of players (2-4): "))
+        num_of_players = int(input("This number is invalid. Please enter the number of players (2-4): "))
 
     #Welcomes players to the game and allows players to choose their name.
     print("\nWelcome to Scrabble! Please enter the names of the players below.")
     players = []
     for i in range(num_of_players):
         players.append(Player(bag))
-        players[i].set_name(raw_input("Please enter player " + str(i+1) + "'s name: "))
+        players[i].set_name(input("Please enter player " + str(i+1) + "'s name: "))
 
     #Sets the default value of global variables.
     round_number = 1
@@ -482,7 +482,7 @@ def end_game():
             winning_player = player.get_name()
     print("The game is over! " + player.get_name() + ", you have won!")
 
-    if raw_input("\nWould you like to play again? (y/n)").upper() == "Y":
+    if input("\nWould you like to play again? (y/n)").upper() == "Y":
         start_game()
 
 start_game()
