@@ -234,7 +234,7 @@ class Board:
         #Allows you to play words, assuming that they have already been confirmed as valid.
         global premium_spots
         premium_spots = []
-        direction.lower()
+        direction = direction.lower()
         word = word.upper()
 
         #Places the word going rightwards
@@ -344,6 +344,8 @@ class Word:
         #If the user IS skipping the turn, confirm. If the user replies with "Y", skip the player's turn. Otherwise, allow the user to enter another word.
         else:
             if input("Are you sure you would like to skip your turn? (y/n)").upper() == "Y":
+                if round_number == 1 and players[0] == self.player:
+                    return "Please do not skip the first turn. Please enter a word."
                 return True
             else:
                 return "Please enter a word."
@@ -351,14 +353,13 @@ class Word:
     def calculate_word_score(self):
         #Calculates the score of a word, allowing for the impact by premium squares.
         global LETTER_VALUES, premium_spots
-        premium_spots = []
         word_score = 0
         for letter in self.word:
             for spot in premium_spots:
                 if letter == spot[0]:
                     if spot[1] == "TLS":
                         word_score += LETTER_VALUES[letter] * 2
-                    elif spot[2] == "DLS":
+                    elif spot[1] == "DLS":
                         word_score += LETTER_VALUES[letter]
             word_score += LETTER_VALUES[letter]
         for spot in premium_spots:
@@ -369,7 +370,7 @@ class Word:
         self.player.increase_score(word_score)
 
     def set_word(self, word):
-        self.word = word
+        self.word = word.upper()
 
     def set_location(self, location):
         self.location = location
@@ -407,9 +408,11 @@ def turn(player, board, bag):
         word = Word(word_to_play, location, player, direction, board.board_array())
 
         #If the first word throws an error, creates a recursive loop until the information is given correctly.
-        while word.check_word() != True:
-            print (word.check_word())
-            word.set_word(input("Word to play: "))
+        checked = word.check_word()
+        while checked != True:
+            print(checked)
+            word_to_play = input("Word to play: ")
+            word.set_word(word_to_play)
             location = []
             col = input("Column number: ")
             row = input("Row number: ")
@@ -417,7 +420,10 @@ def turn(player, board, bag):
                 location = [-1, -1]
             else:
                 word.set_location([int(row), int(col)])
-            word.set_direction(input("Direction of word (right or down): "))
+                location = [int(row), int(col)]
+            direction = input("Direction of word (right or down): ")
+            word.set_direction(direction)
+            checked = word.check_word()
 
         #If the user has confirmed that they would like to skip their turn, skip it.
         #Otherwise, plays the correct word and prints the board.
@@ -425,7 +431,6 @@ def turn(player, board, bag):
             print("Your turn has been skipped.")
             skipped_turns += 1
         else:
-
             board.place_word(word_to_play, location, direction, player)
             word.calculate_word_score()
             skipped_turns = 0
@@ -480,7 +485,7 @@ def end_game():
         if player.get_score > highest_score:
             highest_score = player.get_score()
             winning_player = player.get_name()
-    print("The game is over! " + player.get_name() + ", you have won!")
+    print("The game is over! " + winning_player + ", you have won!")
 
     if input("\nWould you like to play again? (y/n)").upper() == "Y":
         start_game()
