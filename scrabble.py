@@ -275,7 +275,9 @@ class Word:
         #Also controls the overlapping of words.
         global round_number, players
         word_score = 0
-        dictionary = open("dic.txt").read()
+        global dictionary 
+        if "dictionary" not in globals():
+            dictionary = open("dic.txt").read().splitlines()
 
         current_board_ltr = ""
         needed_tiles = ""
