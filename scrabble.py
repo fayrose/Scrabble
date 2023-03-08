@@ -247,8 +247,8 @@ class Board:
         #Places the word going downwards
         elif direction.lower() == "down":
             for i in range(len(word)):
-                if self.board[location[0]][location[1]+i] != "   ":
-                    premium_spots.append((word[i], self.board[location[0]][location[1]+i]))
+                if self.board[location[0]+i][location[1]] != "   ":
+                    premium_spots.append((word[i], self.board[location[0]+i][location[1]]))
                 self.board[location[0]+i][location[1]] = " " + word[i] + " "
 
         #Removes tiles from player's rack and replaces them with tiles from the bag.
@@ -280,6 +280,7 @@ class Word:
             dictionary = open("dic.txt").read().splitlines()
 
         current_board_ltr = ""
+        other_words_intersect = []
         needed_tiles = ""
         blank_tile_val = ""
 
@@ -295,16 +296,26 @@ class Word:
             #Reads in the board's current values under where the word that is being played will go. Raises an error if the direction is not valid.
             if self.direction == "right":
                 for i in range(len(self.word)):
-                    if self.board[self.location[0]][self.location[1]+i][1] == " " or self.board[self.location[0]][self.location[1]+i] == "TLS" or self.board[self.location[0]][self.location[1]+i] == "TWS" or self.board[self.location[0]][self.location[1]+i] == "DLS" or self.board[self.location[0]][self.location[1]+i] == "DWS" or self.board[self.location[0]][self.location[1]+i][1] == "*":
+                    if self.board[self.location[0]][self.location[1]+i][1] in ["   ","TLS","TWS","DLS","DWS"," * "]:
                         current_board_ltr += " "
                     else:
                         current_board_ltr += self.board[self.location[0]][self.location[1]+i][1]
+                i += 1
+                while i <= 14 and self.board[self.location[0]][self.location[1]+i][1] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                    current_board_ltr += self.board[self.location[0]][self.location[1]+i][1]
+                    self.word += self.board[self.location[0]][self.location[1]+i][1]
+                    i += 1
             elif self.direction == "down":
                 for i in range(len(self.word)):
-                    if self.board[self.location[0]+i][self.location[1]] == "   " or self.board[self.location[0]+i][self.location[1]] == "TLS" or self.board[self.location[0]+i][self.location[1]] == "TWS" or self.board[self.location[0]+i][self.location[1]] == "DLS" or self.board[self.location[0]+i][self.location[1]] == "DWS" or self.board[self.location[0]+i][self.location[1]] == " * ":
+                    if self.board[self.location[0]+i][self.location[1]] in ["   ","TLS","TWS","DLS","DWS"," * "]:
                         current_board_ltr += " "
                     else:
                         current_board_ltr += self.board[self.location[0]+i][self.location[1]][1]
+                i += 1
+                while i <= 14 and self.board[self.location[0]+i][self.location[1]] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                    current_board_ltr += self.board[self.location[0]+i][self.location[1]]
+                    self.word += self.board[self.location[0]+i][self.location[1]]
+                    i += 1
             else:
                 return "Error: please enter a valid direction."
 
@@ -326,6 +337,8 @@ class Word:
 
             #Ensures that the word will be connected to other words on the playing board.
             if (round_number != 1 or (round_number == 1 and players[0] != self.player)) and current_board_ltr == " " * len(self.word):
+                pass # to be completed with code to allow for intersecting other words without sharing an existing letter
+            elif (round_number != 1 or (round_number == 1 and players[0] != self.player)) and current_board_ltr == " " * len(self.word):
                 print("Current_board_ltr: " + str(current_board_ltr) + ", Word: " + self.word + ", Needed_Tiles: " + needed_tiles)
                 return "Please connect the word to a previously played letter."
 
