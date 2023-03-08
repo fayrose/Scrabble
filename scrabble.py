@@ -295,24 +295,70 @@ class Word:
 
             #Reads in the board's current values under where the word that is being played will go. Raises an error if the direction is not valid.
             if self.direction == "right":
+                j = -1
+                while self.location[1]+j >= 0 and self.board[self.location[0]][self.location[1]+j][1] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                    current_board_ltr = self.board[self.location[0]][self.location[1]+j][1] + current_board_ltr
+                    self.word = self.board[self.location[0]][self.location[1]+j][1] + self.word
+                    j -= 1
                 for i in range(len(self.word)):
                     if self.board[self.location[0]][self.location[1]+i][1] in ["   ","TLS","TWS","DLS","DWS"," * "]:
                         current_board_ltr += " "
+                        j = -1
+                        other_word = ""
+                        while self.location[0]+j>=0 and self.board[self.location[0]+j][self.location[1]+i][1] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                            other_word = self.board[self.location[0]+j][self.location[1]+i][1] + other_word
+                        if other_word:
+                            other_word += self.word[i]
+                            j = 1
+                            while self.location[0]+j<=14 and self.board[self.location[0]+j][self.location[1]+i][1] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                                other_word += self.board[self.location[0]+j][self.location[1]+i][1]
+                        else:
+                            j = 1
+                            while self.location[0]+j<=14 and self.board[self.location[0]+j][self.location[1]+i][1] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                                other_word += self.board[self.location[0]+j][self.location[1]+i][1]
+                            if other_word:
+                                other_word = self.word[i] + other_word
+                        if other_word:
+                            print(f"Found an intersecting word: {other_word}")
+                            other_words_intersect.append(other_word)
                     else:
                         current_board_ltr += self.board[self.location[0]][self.location[1]+i][1]
                 i += 1
-                while i <= 14 and self.board[self.location[0]][self.location[1]+i][1] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                while self.location[1]+i <= 14 and self.board[self.location[0]][self.location[1]+i][1] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
                     current_board_ltr += self.board[self.location[0]][self.location[1]+i][1]
                     self.word += self.board[self.location[0]][self.location[1]+i][1]
                     i += 1
             elif self.direction == "down":
+                j = -1
+                while self.location[0]+j >= 0 and self.board[self.location[0]+j][self.location[1]][1] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                    current_board_ltr = self.board[self.location[0]+j][self.location[1]][1] + current_board_ltr
+                    self.word = self.board[self.location[0]+j][self.location[1]][1] + self.word
+                    j -= 1
                 for i in range(len(self.word)):
                     if self.board[self.location[0]+i][self.location[1]] in ["   ","TLS","TWS","DLS","DWS"," * "]:
                         current_board_ltr += " "
+                        j = -1
+                        other_word = ""
+                        while self.location[1]+j>=0 and self.board[self.location[0]+i][self.location[1]+j][1] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                            other_word = self.board[self.location[0]+i][self.location[1]+j][1] + other_word
+                        if other_word:
+                            other_word += self.word[i]
+                            j = 1
+                            while self.location[1]+j<=14 and self.board[self.location[0]+i][self.location[1]+j][1] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                                other_word += self.board[self.location[0]+i][self.location[1]+j][1]
+                        else:
+                            j = 1
+                            while self.location[1]+j<=14 and self.board[self.location[0]+i][self.location[1]+j][1] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                                other_word += self.board[self.location[0]+i][self.location[1]+j][1]
+                            if other_word:
+                                other_word = self.word[i] + other_word
+                        if other_word:
+                            print(f"Found an intersecting word: {other_word}")
+                            other_words_intersect.append(other_word)
                     else:
                         current_board_ltr += self.board[self.location[0]+i][self.location[1]][1]
                 i += 1
-                while i <= 14 and self.board[self.location[0]+i][self.location[1]] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                while self.location[0]+i <= 14 and self.board[self.location[0]+i][self.location[1]] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
                     current_board_ltr += self.board[self.location[0]+i][self.location[1]]
                     self.word += self.board[self.location[0]+i][self.location[1]]
                     i += 1
