@@ -19,7 +19,7 @@ LETTER_VALUES = {"A": 1,
                  "G": 2,
                  "H": 4,
                  "I": 1,
-                 "J": 1,
+                 "J": 8,
                  "K": 5,
                  "L": 1,
                  "M": 3,
@@ -110,6 +110,11 @@ class Bag:
     def take_from_bag(self):
         #Removes a tile from the bag and returns it to the user. This is used for replenishing the rack.
         return self.bag.pop()
+
+    def return_to_bag(self, letters):
+        #Puts tiles back in that player wishes to return
+        for letter in letters:
+            self.add_to_bag(letter, 1)
 
     def get_remaining_tiles(self):
         #Returns the number of tiles left in the bag.
@@ -204,22 +209,26 @@ class Board:
     """
     def __init__(self):
         #Creates a 2-dimensional array that will serve as the board, as well as adds in the premium squares.
-        self.board = [["   " for i in range(15)] for j in range(15)]
+        self.board = [["___" for i in range(15)] for j in range(15)]
         self.add_premium_squares()
-        self.board[7][7] = " * "
+        self.board[7][7] = "_*_"
 
     def get_board(self):
         #Returns the board in string form.
-        board_str = "   |  " + "  |  ".join(str(item) for item in range(10)) + "  | " + "  | ".join(str(item) for item in range(10, 15)) + " |"
-        board_str += "\n   _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n"
+        board_str = "  |_" + "_|_".join(str(item) for item in range(10)) + "_|" + "_|".join(str(item) for item in range(10, 15)) + "_|\n"
+        # board_str = "   |  " + "  |  ".join(str(item) for item in range(10)) + "  | " + "  | ".join(str(item) for item in range(10, 15)) + " |"
+        # board_str += "\n   _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n"
         board = list(self.board)
         for i in range(len(board)):
             if i < 10:
-                board[i] = str(i) + "  | " + " | ".join(str(item) for item in board[i]) + " |"
+                board[i] = str(i) + " |" + "|".join(str(item) for item in board[i]) + "|"
+                # board[i] = str(i) + "  | " + " | ".join(str(item) for item in board[i]) + " |"
             if i >= 10:
-                board[i] = str(i) + " | " + " | ".join(str(item) for item in board[i]) + " |"
-        board_str += "\n   |_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _|\n".join(board)
-        board_str += "\n   _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _"
+                board[i] = str(i) + "|" + "|".join(str(item) for item in board[i]) + "|"
+                # board[i] = str(i) + " | " + " | ".join(str(item) for item in board[i]) + " |"
+        board_str += "\n".join(board)
+        # board_str += "\n   |_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _|\n".join(board)
+        # board_str += "\n   _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _"
         return board_str
 
     def add_premium_squares(self):
@@ -248,16 +257,16 @@ class Board:
         #Places the word going rightwards
         if direction.lower() == "right":
             for i in range(len(word)):
-                if self.board[location[0]][location[1]+i] != "   ":
+                if self.board[location[0]][location[1]+i] != "___":
                     premium_spots.append((word[i], self.board[location[0]][location[1]+i]))
-                self.board[location[0]][location[1]+i] = " " + word[i] + " "
+                self.board[location[0]][location[1]+i] = "_" + word[i] + "_"
 
         #Places the word going downwards
         elif direction.lower() == "down":
             for i in range(len(word)):
-                if self.board[location[0]+i][location[1]] != "   ":
+                if self.board[location[0]+i][location[1]] != "___":
                     premium_spots.append((word[i], self.board[location[0]+i][location[1]]))
-                self.board[location[0]+i][location[1]] = " " + word[i] + " "
+                self.board[location[0]+i][location[1]] = "_" + word[i] + "_"
 
         #Removes tiles from player's rack and replaces them with tiles from the bag.
         for letter in word:
@@ -265,6 +274,25 @@ class Board:
                 if tile.get_letter() == letter:
                     player.rack.remove_from_rack(tile)
         player.rack.replenish_rack()
+
+    def prelim_place_word(self, word, location, direction, player):
+        #Allows you to play words, assuming that they have already been confirmed as valid.
+        global premium_spots
+        premium_spots = []
+        direction = direction.lower()
+        word = word.upper()
+
+        #Places the word going rightwards
+        if direction.lower() == "right":
+            for i in range(len(word)):
+                if self.board[location[0]][location[1]+i] != "___":
+                    premium_spots.append((word[i], self.board[location[0]][location[1]+i]))
+
+        #Places the word going downwards
+        elif direction.lower() == "down":
+            for i in range(len(word)):
+                if self.board[location[0]+i][location[1]] != "___":
+                    premium_spots.append((word[i], self.board[location[0]+i][location[1]]))
 
     def board_array(self):
         #Returns the 2-dimensional board array.
@@ -277,6 +305,7 @@ class Word:
         self.player = player
         self.direction = direction.lower()
         self.board = board
+        self.other_words_intersect = []
 
     def check_word(self):
         #Checks the word to make sure that it is in the dictionary, and that the location falls within bounds.
@@ -288,7 +317,7 @@ class Word:
             dictionary = open("dic.txt").read().splitlines()
 
         current_board_ltr = ""
-        other_words_intersect = []
+        # other_words_intersect = []
         needed_tiles = ""
         blank_tile_val = ""
 
@@ -304,75 +333,79 @@ class Word:
             #Reads in the board's current values under where the word that is being played will go. Raises an error if the direction is not valid.
             if self.direction == "right":
                 j = -1
-                while self.location[1]+j >= 0 and self.board[self.location[0]][self.location[1]+j] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                while self.location[1]+j >= 0 and self.board[self.location[0]][self.location[1]+j] not in ["___","TLS","TWS","DLS","DWS","_*_"]:
                     current_board_ltr = self.board[self.location[0]][self.location[1]+j][1] + current_board_ltr
                     self.word = self.board[self.location[0]][self.location[1]+j][1] + self.word
                     j -= 1
                 for i in range(len(self.word)):
-                    if self.board[self.location[0]][self.location[1]+i] in ["   ","TLS","TWS","DLS","DWS"," * "]:
-                        current_board_ltr += " "
+                    if self.board[self.location[0]][self.location[1]+i] in ["___","TLS","TWS","DLS","DWS","_*_"]:
+                        current_board_ltr += "_"
                         j = -1
                         other_word = ""
-                        while self.location[0]+j>=0 and self.board[self.location[0]+j][self.location[1]+i] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                        while self.location[0]+j>=0 and self.board[self.location[0]+j][self.location[1]+i] not in ["___","TLS","TWS","DLS","DWS","_*_"]:
                             other_word = self.board[self.location[0]+j][self.location[1]+i][1] + other_word
+                            start_position = [self.location[0]+j, self.location[1]+i]
                             j -= 1
                         if other_word:
                             other_word += self.word[i]
                             j = 1
-                            while self.location[0]+j<=14 and self.board[self.location[0]+j][self.location[1]+i] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                            while self.location[0]+j<=14 and self.board[self.location[0]+j][self.location[1]+i] not in ["___","TLS","TWS","DLS","DWS","_*_"]:
                                 other_word += self.board[self.location[0]+j][self.location[1]+i][1]
                                 j += 1
                         else:
+                            start_position = [self.location[0], self.location[1]+i]
                             j = 1
-                            while self.location[0]+j<=14 and self.board[self.location[0]+j][self.location[1]+i] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                            while self.location[0]+j<=14 and self.board[self.location[0]+j][self.location[1]+i] not in ["___","TLS","TWS","DLS","DWS","_*_"]:
                                 other_word += self.board[self.location[0]+j][self.location[1]+i][1]
                                 j += 1
                             if other_word:
                                 other_word = self.word[i] + other_word
                         if other_word:
                             print(f"Found an intersecting word: {other_word}")
-                            other_words_intersect.append(other_word)
+                            self.other_words_intersect.append(Word(other_word, start_position, self.player, 'down', self.board))
                     else:
                         current_board_ltr += self.board[self.location[0]][self.location[1]+i][1]
                 i += 1
-                while self.location[1]+i <= 14 and self.board[self.location[0]][self.location[1]+i] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                while self.location[1]+i <= 14 and self.board[self.location[0]][self.location[1]+i] not in ["___","TLS","TWS","DLS","DWS","_*_"]:
                     current_board_ltr += self.board[self.location[0]][self.location[1]+i][1]
                     self.word += self.board[self.location[0]][self.location[1]+i][1]
                     i += 1
             elif self.direction == "down":
                 j = -1
-                while self.location[0]+j >= 0 and self.board[self.location[0]+j][self.location[1]] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                while self.location[0]+j >= 0 and self.board[self.location[0]+j][self.location[1]] not in ["___","TLS","TWS","DLS","DWS","_*_"]:
                     current_board_ltr = self.board[self.location[0]+j][self.location[1]][1] + current_board_ltr
                     self.word = self.board[self.location[0]+j][self.location[1]][1] + self.word
                     j -= 1
                 for i in range(len(self.word)):
-                    if self.board[self.location[0]+i][self.location[1]] in ["   ","TLS","TWS","DLS","DWS"," * "]:
-                        current_board_ltr += " "
+                    if self.board[self.location[0]+i][self.location[1]] in ["___","TLS","TWS","DLS","DWS","_*_"]:
+                        current_board_ltr += "_"
                         j = -1
                         other_word = ""
-                        while self.location[1]+j>=0 and self.board[self.location[0]+i][self.location[1]+j] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                        while self.location[1]+j>=0 and self.board[self.location[0]+i][self.location[1]+j] not in ["___","TLS","TWS","DLS","DWS","_*_"]:
                             other_word = self.board[self.location[0]+i][self.location[1]+j][1] + other_word
+                            start_position = [self.location[0]+i, self.location[1]+j]
                             j -= 1
                         if other_word:
                             other_word += self.word[i]
                             j = 1
-                            while self.location[1]+j<=14 and self.board[self.location[0]+i][self.location[1]+j] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                            while self.location[1]+j<=14 and self.board[self.location[0]+i][self.location[1]+j] not in ["___","TLS","TWS","DLS","DWS","_*_"]:
                                 other_word += self.board[self.location[0]+i][self.location[1]+j][1]
                                 j += 1
                         else:
+                            start_position = [self.location[0]+i, self.location[1]]
                             j = 1
-                            while self.location[1]+j<=14 and self.board[self.location[0]+i][self.location[1]+j] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                            while self.location[1]+j<=14 and self.board[self.location[0]+i][self.location[1]+j] not in ["___","TLS","TWS","DLS","DWS","_*_"]:
                                 other_word += self.board[self.location[0]+i][self.location[1]+j][1]
                                 j += 1
                             if other_word:
                                 other_word = self.word[i] + other_word
                         if other_word:
                             print(f"Found an intersecting word: {other_word}")
-                            other_words_intersect.append(other_word)
+                            self.other_words_intersect.append(Word(other_word, start_position, self.player, 'right', self.board))
                     else:
                         current_board_ltr += self.board[self.location[0]+i][self.location[1]][1]
                 i += 1
-                while self.location[0]+i <= 14 and self.board[self.location[0]+i][self.location[1]] not in ["   ","TLS","TWS","DLS","DWS"," * "]:
+                while self.location[0]+i <= 14 and self.board[self.location[0]+i][self.location[1]] not in ["___","TLS","TWS","DLS","DWS","_*_"]:
                     current_board_ltr += self.board[self.location[0]+i][self.location[1]]
                     self.word += self.board[self.location[0]+i][self.location[1]]
                     i += 1
@@ -383,9 +416,13 @@ class Word:
             if self.word not in dictionary:
                 return "Please enter a valid dictionary word.\n"
 
+            for one_other_word in self.other_words_intersect:
+                if one_other_word.word not in dictionary:
+                    return f"One of the intersecting words - {one_other_word} - is not a valid dictionary word."
+
             #Ensures that the words overlap correctly. If there are conflicting letters between the current board and the word being played, raises an error.
             for i in range(len(self.word)):
-                if current_board_ltr[i] == " ":
+                if current_board_ltr[i] == "_":
                     needed_tiles += self.word[i]
                 elif current_board_ltr[i] != self.word[i]:
                     print("Current_board_ltr: " + str(current_board_ltr) + ", Word: " + self.word + ", Needed_Tiles: " + needed_tiles)
@@ -393,12 +430,13 @@ class Word:
 
             #If there is a blank tile, remove it's given value from the tiles needed to play the word.
             if blank_tile_val != "":
-                needed_tiles = needed_tiles[needed_tiles.index(blank_tile_val.upper()):] + needed_tiles[:needed_tiles.index(blank_tile_val.upper())]
+                needed_tiles = needed_tiles[needed_tiles.index(blank_tile_val.upper())+1:] + needed_tiles[:needed_tiles.index(blank_tile_val.upper())]
+                print("NEEDED TILES: ",needed_tiles)
 
             #Ensures that the word will be connected to other words on the playing board.
-            if (round_number != 1 or (round_number == 1 and players[0] != self.player)) and current_board_ltr == " " * len(self.word):
+            if (round_number != 1 or (round_number == 1 and players[0] != self.player)) and current_board_ltr == "_" * len(self.word):
                 pass # to be completed with code to allow for intersecting other words without sharing an existing letter
-            elif (round_number != 1 or (round_number == 1 and players[0] != self.player)) and current_board_ltr == " " * len(self.word):
+            elif (round_number != 1 or (round_number == 1 and players[0] != self.player)) and current_board_ltr == "_" * len(self.word):
                 print("Current_board_ltr: " + str(current_board_ltr) + ", Word: " + self.word + ", Needed_Tiles: " + needed_tiles)
                 return "Please connect the word to a previously played letter."
 
@@ -412,7 +450,13 @@ class Word:
                 return "Location out of bounds.\n"
 
             #Ensures that first turn of the game will have the word placed at (7,7).
-            if round_number == 1 and players[0] == self.player and self.location != [7,7]:
+            if round_number == 1 and players[0] == self.player and (
+                (
+                    self.direction == "down" and self.location[1] == 1 and self.location[0] <=7 and (self.location[0]+len(self.word)-1) >= 7
+                ) or (
+                    self.direction == "right" and self.location[0] == 1 and self.location[1] <=7 and (self.location[0]+len(self.word)-1) >= 7
+                )
+            ):
                 return "The first turn must begin at location (7, 7).\n"
             return True
 
@@ -442,7 +486,28 @@ class Word:
                 word_score *= 3
             elif spot[1] == "DWS":
                 word_score *= 2
-            elif spot[1] == " * ":
+            elif spot[1] == "_*_":
+                word_score *= 2
+        self.player.increase_score(word_score)
+
+    def calculate_other_word_score(self):
+        #Calculates the score of a word, allowing for the impact by premium squares.
+        global LETTER_VALUES
+        word_score = 0
+        for letter in self.word:
+            for spot in premium_spots:
+                if letter == spot[0]:
+                    if spot[1] == "TLS":
+                        word_score += LETTER_VALUES[letter] * 2
+                    elif spot[1] == "DLS":
+                        word_score += LETTER_VALUES[letter]
+            word_score += LETTER_VALUES[letter]
+        for spot in premium_spots:
+            if spot[1] == "TWS":
+                word_score *= 3
+            elif spot[1] == "DWS":
+                word_score *= 2
+            elif spot[1] == "_*_":
                 word_score *= 2
         self.player.increase_score(word_score)
 
@@ -509,9 +574,13 @@ def turn(player, board, bag):
             print("Your turn has been skipped.")
             skipped_turns += 1
         else:
+            # need a way to check score for all words before placing the main word - calculate_other_word_score
+            for one_other_word in word.other_words_intersect:
+                board.prelim_place_word(one_other_word.word, one_other_word.location, one_other_word.direction, player)
+                one_other_word.calculate_other_word_score()
             board.place_word(word_to_play, location, direction, player)
             word.calculate_word_score()
-            skipped_turns = 0
+            skipped_turns += 0
 
         #Prints the current player's score
         print("\n" + player.get_name() + "'s score is: " + str(player.get_score()))
