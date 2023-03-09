@@ -138,6 +138,10 @@ class Rack:
         #Displays the user's rack in string form.
         return ", ".join(str(item.get_letter()) for item in self.rack)
 
+    def get_rack_pts(self):
+        #Display the user's letter scores in string form
+        return ", ".join(str(item.get_score()) for item in self.rack)
+
     def get_rack_arr(self):
         #Returns the rack as an array of tile instances
         return self.rack
@@ -177,6 +181,10 @@ class Player:
     def get_rack_str(self):
         #Returns the player's rack.
         return self.rack.get_rack_str()
+
+    def get_rack_pts(self):
+        #Returns the player's letter point values
+        return self.rack.get_rack_pts()
 
     def get_rack_arr(self):
         #Returns the player's rack in the form of an array.
@@ -462,6 +470,7 @@ def turn(player, board, bag):
         print("\nRound " + str(round_number) + ": " + player.get_name() + "'s turn \n")
         print(board.get_board())
         print("\n" + player.get_name() + "'s Letter Rack: " + player.get_rack_str())
+        print(player.get_name() + " Letter Scores: " + player.get_rack_pts())
 
         #Gets information in order to play a word.
         word_to_play = input("Word to play: ")
