@@ -616,6 +616,7 @@ def start_game():
     for i in range(num_of_players):
         players.append(Player(bag))
         players[i].set_name(input("Please enter player " + str(i+1) + "'s name: "))
+        # initialize a score dictionary for keeping running score
 
     #Sets the default value of global variables.
     round_number = 1
