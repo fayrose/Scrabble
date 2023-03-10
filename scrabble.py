@@ -181,6 +181,7 @@ class Player:
         #Takes the bag as an argument, in order to create the rack.
         self.name = ""
         self.rack = Rack(bag)
+        self.running_score = []
         self.score = 0
 
     def set_name(self, name):
@@ -206,6 +207,14 @@ class Player:
     def increase_score(self, increase):
         #Increases the player's score by a certain amount. Takes the increase (int) as an argument and adds it to the score.
         self.score += increase
+
+    def add_running_score(self, score):
+        # add score for a round
+        self.running_score.append(score)
+
+    def get_running_score(self):
+        # display the running score
+        return "+".join([str(x) for x in self.running_score])
 
     def get_score(self):
         #Returns the player's score
@@ -265,23 +274,33 @@ class Board:
         #Places the word going rightwards
         if direction.lower() == "right":
             for i in range(len(word)):
-                if self.board[location[0]][location[1]+i] != "___":
-                    premium_spots.append((word[i], self.board[location[0]][location[1]+i]))
-                if word[i] != "#":
+                if '.' in self.board[location[0]][location[1]+i]:
+                    premium_spots.append((word[i], "ZPT", i))
+                elif self.board[location[0]][location[1]+i] != "___":
+                    premium_spots.append((word[i], self.board[location[0]][location[1]+i], i))
+                if "." in self.board[location[0]][location[1]+i]:
+                    continue
+                elif word[i] != "#":
                     self.board[location[0]][location[1]+i] = "_" + word[i] + "_"
                 else:
-                    self.board[location[0]][location[1]+i] = "_" + blanks[0] + "_"
+                    premium_spots.append((blanks[0], "ZPT", i))
+                    self.board[location[0]][location[1]+i] = "." + blanks[0] + "."
                     blanks = blanks[1:]
 
         #Places the word going downwards
         elif direction.lower() == "down":
             for i in range(len(word)):
-                if self.board[location[0]+i][location[1]] != "___":
-                    premium_spots.append((word[i], self.board[location[0]+i][location[1]]))
-                if word[i] != "#":
+                if '.' in self.board[location[0]+i][location[1]]:
+                    premium_spots.append((word[i], "ZPT", i))
+                elif self.board[location[0]+i][location[1]] != "___":
+                    premium_spots.append((word[i], self.board[location[0]+i][location[1]], i))
+                if "." in self.board[location[0]+i][location[1]]:
+                    continue
+                elif word[i] != "#":
                     self.board[location[0]+i][location[1]] = "_" + word[i] + "_"
                 else:
-                    self.board[location[0]+i][location[1]] = "_" + blanks[0] + "_"
+                    premium_spots.append((blanks[0], "ZPT", i))
+                    self.board[location[0]+i][location[1]] = "." + blanks[0] + "."
                     blanks = blanks[1:]
 
         #Removes tiles from player's rack and replaces them with tiles from the bag.
@@ -301,14 +320,18 @@ class Board:
         #Places the word going rightwards
         if direction.lower() == "right":
             for i in range(len(word)):
-                if self.board[location[0]][location[1]+i] != "___":
-                    premium_spots.append((word[i], self.board[location[0]][location[1]+i]))
+                if '.' in self.board[location[0]][location[1]+i]:
+                    premium_spots.append((word[i], "ZPT", i))
+                elif self.board[location[0]][location[1]+i] != "___":
+                    premium_spots.append((word[i], self.board[location[0]][location[1]+i], i))
 
         #Places the word going downwards
         elif direction.lower() == "down":
             for i in range(len(word)):
-                if self.board[location[0]+i][location[1]] != "___":
-                    premium_spots.append((word[i], self.board[location[0]+i][location[1]]))
+                if '.' in self.board[location[0]+i][location[1]]:
+                    premium_spots.append((word[i], "ZPT", i))
+                elif self.board[location[0]+i][location[1]] != "___":
+                    premium_spots.append((word[i], self.board[location[0]+i][location[1]], i))
 
     def board_array(self):
         #Returns the 2-dimensional board array.
@@ -449,7 +472,6 @@ class Word:
             #If there is a blank tile, remove it's given value from the tiles needed to play the word.
             for blank_tile in blank_tile_val:
                 needed_tiles = needed_tiles[needed_tiles.index(blank_tile.upper())+1:] + needed_tiles[:needed_tiles.index(blank_tile.upper())]
-                print("NEEDED TILES: ",needed_tiles)
 
             #Ensures that the word will be connected to other words on the playing board.
             if (round_number != 1 or (round_number == 1 and players[0] != self.player)) and current_board_ltr == "_" * len(self.word):
@@ -496,14 +518,19 @@ class Word:
         #Calculates the score of a word, allowing for the impact by premium squares.
         global LETTER_VALUES, premium_spots
         word_score = 0
-        for letter in self.word:
+        for i, letter in enumerate(self.word):
             for spot in premium_spots:
-                if letter == spot[0]:
+                if letter == spot[0] and i == spot[2]:
                     if spot[1] == "TLS":
-                        word_score += LETTER_VALUES[letter] * 2
+                        word_score += LETTER_VALUES[letter] * 3
+                        break
                     elif spot[1] == "DLS":
-                        word_score += LETTER_VALUES[letter]
-            word_score += LETTER_VALUES[letter]
+                        word_score += LETTER_VALUES[letter] * 2
+                        break
+                    elif spot[1] == "ZPT":
+                        break
+            else:
+                word_score += LETTER_VALUES[letter]
         for spot in premium_spots:
             if spot[1] == "TWS":
                 word_score *= 3
@@ -517,14 +544,19 @@ class Word:
         #Calculates the score of a word, allowing for the impact by premium squares.
         global LETTER_VALUES
         word_score = 0
-        for letter in self.word:
+        for i, letter in enumerate(self.word):
             for spot in premium_spots:
-                if letter == spot[0]:
+                if letter == spot[0] and i == spot[2]:
                     if spot[1] == "TLS":
-                        word_score += LETTER_VALUES[letter] * 2
+                        word_score += LETTER_VALUES[letter] * 3
+                        break
                     elif spot[1] == "DLS":
-                        word_score += LETTER_VALUES[letter]
-            word_score += LETTER_VALUES[letter]
+                        word_score += LETTER_VALUES[letter] * 2
+                        break
+                    elif spot[1] == "ZPT":
+                        break
+            else:
+                word_score += LETTER_VALUES[letter]
         for spot in premium_spots:
             if spot[1] == "TWS":
                 word_score *= 3
@@ -595,6 +627,7 @@ def turn(player, board, bag):
 
         #If the user has confirmed that they would like to skip their turn, skip it.
         #Otherwise, plays the correct word and prints the board.
+        old_score = player.get_score()
         if word.get_word() == "":
             print("Your turn has been skipped.")
             skipped_turns += 1
@@ -609,7 +642,10 @@ def turn(player, board, bag):
             skipped_turns += 0
 
         #Prints the current player's score
-        print("\n" + player.get_name() + "'s score is: " + str(player.get_score()))
+        round_score = player.get_score()-old_score
+        player.add_running_score(round_score)
+        print(f"\n{player.get_name()}'s score is {player.get_running_score()}={player.get_score()}")
+        
 
         #Gets the next player.
         if players.index(player) != (len(players)-1):
