@@ -1,4 +1,5 @@
 import os
+from ast import literal_eval
 from random import shuffle
 
 """
@@ -38,6 +39,16 @@ LETTER_VALUES = {"A": 1,
                  "Y": 4,
                  "Z": 10,
                  "#": 0}
+
+def wait_until_terminal_size_correct():
+    if os.get_terminal_size().lines < 26:
+        print("Your terminal is too short. Increase the height of your terminal (or decrease the size of the font).")
+        while os.get_terminal_size().lines < 26:
+            continue
+    if os.get_terminal_size().columns < 64:
+        print("Your terminal is too narrow. Increase the width of your terminal (or decrease the size of the font).")
+        while os.get_terminal_size().columns < 64:
+            continue
 
 class Tile:
     """
@@ -95,7 +106,7 @@ class Bag:
         self.add_to_bag(Tile("G", LETTER_VALUES), 3)
         self.add_to_bag(Tile("H", LETTER_VALUES), 2)
         self.add_to_bag(Tile("I", LETTER_VALUES), 9)
-        self.add_to_bag(Tile("J", LETTER_VALUES), 9)
+        self.add_to_bag(Tile("J", LETTER_VALUES), 1)
         self.add_to_bag(Tile("K", LETTER_VALUES), 1)
         self.add_to_bag(Tile("L", LETTER_VALUES), 4)
         self.add_to_bag(Tile("M", LETTER_VALUES), 2)
@@ -159,6 +170,9 @@ class Rack:
         #Returns the rack as an array of tile instances
         return self.rack
 
+    def shuffle_rack(self):
+        shuffle(self.rack)
+
     def remove_from_rack(self, tile):
         #Removes a tile from the rack (for example, when a tile is being played).
         self.rack.remove(tile)
@@ -204,6 +218,9 @@ class Player:
         #Returns the player's rack in the form of an array.
         return self.rack.get_rack_arr()
 
+    def shuffle_rack(self):
+        self.rack.shuffle_rack()
+
     def increase_score(self, increase):
         #Increases the player's score by a certain amount. Takes the increase (int) as an argument and adds it to the score.
         self.score += increase
@@ -232,16 +249,16 @@ class Board:
 
     def get_board(self):
         #Returns the board in string form.
-        board_str = "  |_" + "_|_".join(str(item) for item in range(10)) + "_|" + "_|".join(str(item) for item in range(10, 15)) + "_|\n"
+        board_str = " |_" + "_|_".join(str(item) for item in range(10)) + "_|_" + "_|_".join(ch for ch in 'ABCDE') + "_|\n"
         # board_str = "   |  " + "  |  ".join(str(item) for item in range(10)) + "  | " + "  | ".join(str(item) for item in range(10, 15)) + " |"
         # board_str += "\n   _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n"
         board = list(self.board)
         for i in range(len(board)):
             if i < 10:
-                board[i] = str(i) + " |" + "|".join(str(item) for item in board[i]) + "|"
+                board[i] = str(i) + "|" + "|".join(str(item) for item in board[i]) + "|"
                 # board[i] = str(i) + "  | " + " | ".join(str(item) for item in board[i]) + " |"
             if i >= 10:
-                board[i] = str(i) + "|" + "|".join(str(item) for item in board[i]) + "|"
+                board[i] = hex(i)[2].upper() + "|" + "|".join(str(item) for item in board[i]) + "|"
                 # board[i] = str(i) + " | " + " | ".join(str(item) for item in board[i]) + " |"
         board_str += "\n".join(board)
         # board_str += "\n   |_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _|\n".join(board)
@@ -576,47 +593,50 @@ class Word:
 def turn(player, board, bag):
     #Begins a turn, by displaying the current board, getting the information to play a turn, and creates a recursive loop to allow the next person to play.
     global round_number, players, skipped_turns
+    wait_until_terminal_size_correct()
 
     #If the number of skipped turns is less than 6 and a row, and there are either tiles in the bag, or no players have run out of tiles, play the turn.
     #Otherwise, end the game.
     if (skipped_turns < 6) or (player.rack.get_rack_length() == 0 and bag.get_remaining_tiles() == 0):
 
         #Displays whose turn it is, the current board, and the player's rack.
-        print("\n"*(os.get_terminal_size().lines-24))
+        print("\n"*(os.get_terminal_size().lines-24-len(players)))
+        for plyr in players:
+            print(f"{plyr.get_name()}'s score is {plyr.get_running_score()}={plyr.get_score()}")
         print("\nRound " + str(round_number) + ": " + player.get_name() + "'s turn \n")
         print(board.get_board())
         print("\n" + player.get_name() + "'s Letter Rack: " + player.get_rack_str())
         print(player.get_name() + " Letter Scores: " + player.get_rack_pts())
 
-        #Gets information in order to play a word.
-        word_to_play = input("Word to play: ")
-        location = []
-        col = input("Column number: ")
-        row = input("Row number: ")
-        if (col == "" or row == "") or (col not in [str(x) for x in range(15)] or row not in [str(x) for x in range(15)]):
-            location = [-1, -1]
-        else:
-            location = [int(row), int(col)]
-        direction = input("Direction of word (right or down): ")
-
-        word = Word(word_to_play, location, player, direction, board.board_array())
-
         #If the first word throws an error, creates a recursive loop until the information is given correctly.
-        checked = word.check_word()
+        checked = ['']
         while len(checked) == 1:
-            print(checked[0])
+            if checked[0] != '':
+                print(checked[0])
+            #Gets information in order to play a word.
             word_to_play = input("Word to play: ")
-            word.set_word(word_to_play)
-            location = []
-            col = input("Column number: ")
-            row = input("Row number: ")
-            if (col == "" or row == "") or (col not in [str(x) for x in range(15)] or row not in [str(x) for x in range(15)]):
+            if word_to_play.lower() == 'shuffle rack':
+                player.shuffle_rack()
+                turn(player, board, bag)
+            print("Enter CRD for the word (e.g. 7AR will start the word in col 7, row A, and build to the right)")
+            CRD = input("Enter the CRD for the word: ").upper()
+            try:
+                col = literal_eval(f"0x{CRD[0]}")
+                row = literal_eval(f"0x{CRD[1]}")
+            except:
+                col = ""
+                row = ""
+            if (col == "" or row == "") or (col not in range(15) or row not in range(15)):
                 location = [-1, -1]
             else:
-                word.set_location([int(row), int(col)])
-                location = [int(row), int(col)]
-            direction = input("Direction of word (right or down): ")
-            word.set_direction(direction)
+                location = [row, col]
+            if CRD[2] == 'D':
+                direction = 'down'
+            elif CRD[2] == 'R':
+                direction = 'right'
+            else:
+                direction = ''
+            word = Word(word_to_play, location, player, direction, board.board_array())
             checked = word.check_word()
         word.word = checked[1]
 
@@ -657,18 +677,43 @@ def turn(player, board, bag):
         end_game()
 
 def start_game():
-    if os.get_terminal_size().lines < 24:
-        print("Your terminal is too short. Increase the height of your terminal (or decrease the size of the font).")
-        while os.get_terminal_size().lines < 24:
-            pass
-    if os.get_terminal_size().columns < 64:
-        print("Your terminal is too narrow. Increase the width of your terminal (or decrease the size of the font).")
-        while os.get_terminal_size().lines < 64:
-            pass
+    wait_until_terminal_size_correct()
     #Begins the game and calls the turn function.
     global round_number, players, skipped_turns
     board = Board()
     bag = Bag()
+
+    print("INSTRUCTIONS".center(os.get_terminal_size()[0],"!"))
+    print(
+        """This Scrabble(TM) Game has been designed for 2-4 players
+
+All characters can be typed lower- or upper-case.
+
+BLANK/WILDCARD TILES
+There are two blank/wildcard tiles in the game.
+They will be represented with # when they are in your hand.
+These tiles are worth 0 points, but may help you build words.
+To use a blank/wildcard tile, type the word with # in its place.
+For example, type 'wor#' if you want to use it to play 'word'.
+The program will ask you to pick what letter # will represent.
+When the wildcard is placed on the board, it will look like '.D.'
+
+USING THE BOARD
+The board has its columns and rows labeled for reference.
+You will provide a start position and direction of the word.
+Start position is the column and row of the first letter.
+Direction is how to orient the word, down or right.
+You will provide a 3-character command for placement.
+    First = column, second = row, third = direction
+Here are some examples:
+    77d - would start at column 7, row 7, and go down from there
+    0Ar - would start at column 0, row A, and go to the right
+
+SPECIAL COMMANDS
+When you are asked to type a word, you can also type commands:
+    shuffle rack - this will randomly shuffle your tiles
+Other special commands will be added as required"""
+    )
 
     #Asks the player for the number of players.
     num_of_players = int(input("\nPlease enter the number of players (2-4): "))
