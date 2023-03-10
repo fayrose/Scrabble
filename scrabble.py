@@ -498,11 +498,6 @@ class Word:
                 )
             ):
                 return ["The first turn must pass through location (7, 7).\n"]
-            # for blank_tile in blank_tile_val:
-            #     for tile in self.player.get_rack_arr():
-            #         if tile.get_letter() == "#":
-            #             tile.set_letter(blank_tile)
-            #             break
             return [True, self.word, blank_tile_val]
 
         #If the user IS skipping the turn, confirm. If the user replies with "Y", skip the player's turn. Otherwise, allow the user to enter another word.
@@ -686,7 +681,6 @@ def start_game():
     for i in range(num_of_players):
         players.append(Player(bag))
         players[i].set_name(input("Please enter player " + str(i+1) + "'s name: "))
-        # initialize a score dictionary for keeping running score
 
     #Sets the default value of global variables.
     round_number = 1
