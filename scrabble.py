@@ -1,3 +1,4 @@
+import os
 from random import shuffle
 
 """
@@ -55,6 +56,13 @@ class Tile:
         #Returns the tile's letter (string).
         return self.letter
 
+    def set_letter(self,new_letter):
+        #Set a blank tile to the letter to be used
+        if self.letter == "#":
+            self.letter = new_letter
+        else:
+            print(f"Trying to set a new letter when letter {self.letter} is already assigned.")
+
     def get_score(self):
         #Returns the tile's score value.
         return self.score
@@ -104,7 +112,7 @@ class Bag:
         self.add_to_bag(Tile("X", LETTER_VALUES), 1)
         self.add_to_bag(Tile("Y", LETTER_VALUES), 2)
         self.add_to_bag(Tile("Z", LETTER_VALUES), 1)
-        self.add_to_bag(Tile("#", LETTER_VALUES), 2)
+        self.add_to_bag(Tile("#", LETTER_VALUES), 50)
         shuffle(self.bag)
 
     def take_from_bag(self):
@@ -247,7 +255,7 @@ class Board:
         for coordinate in DOUBLE_LETTER_SCORE:
             self.board[coordinate[0]][coordinate[1]] = "DLS"
 
-    def place_word(self, word, location, direction, player):
+    def place_word(self, word, location, direction, player, blanks):
         #Allows you to play words, assuming that they have already been confirmed as valid.
         global premium_spots
         premium_spots = []
@@ -259,14 +267,22 @@ class Board:
             for i in range(len(word)):
                 if self.board[location[0]][location[1]+i] != "___":
                     premium_spots.append((word[i], self.board[location[0]][location[1]+i]))
-                self.board[location[0]][location[1]+i] = "_" + word[i] + "_"
+                if word[i] != "#":
+                    self.board[location[0]][location[1]+i] = "_" + word[i] + "_"
+                else:
+                    self.board[location[0]][location[1]+i] = "_" + blanks[0] + "_"
+                    blanks = blanks[1:]
 
         #Places the word going downwards
         elif direction.lower() == "down":
             for i in range(len(word)):
                 if self.board[location[0]+i][location[1]] != "___":
                     premium_spots.append((word[i], self.board[location[0]+i][location[1]]))
-                self.board[location[0]+i][location[1]] = "_" + word[i] + "_"
+                if word[i] != "#":
+                    self.board[location[0]+i][location[1]] = "_" + word[i] + "_"
+                else:
+                    self.board[location[0]+i][location[1]] = "_" + blanks[0] + "_"
+                    blanks = blanks[1:]
 
         #Removes tiles from player's rack and replaces them with tiles from the bag.
         for letter in word:
@@ -319,16 +335,18 @@ class Word:
         current_board_ltr = ""
         # other_words_intersect = []
         needed_tiles = ""
-        blank_tile_val = ""
+        blank_tile_val = []
 
         #Assuming that the player is not skipping the turn:
         if self.word != "":
 
             #Allows for players to declare the value of a blank tile.
-            if "#" in self.word:
-                while len(blank_tile_val) != 1:
-                    blank_tile_val = input("Please enter the letter value of the blank tile: ")
-                self.word = self.word[:self.word.index("#")] + blank_tile_val.upper() + self.word[(self.word.index("#")+1):]
+            i = 0
+            while "#" in self.word:
+                ordinals = ['first','second','third','fourth','fifth','sixth','seventh']
+                blank_tile_val.append(input(f"Please enter the letter value of the {ordinals[i]} blank tile: ").upper())
+                self.word = self.word[:self.word.index("#")] + blank_tile_val[i].upper() + self.word[(self.word.index("#")+1):]
+                i += 1
 
             #Reads in the board's current values under where the word that is being played will go. Raises an error if the direction is not valid.
             if self.direction == "right":
@@ -410,15 +428,15 @@ class Word:
                     self.word += self.board[self.location[0]+i][self.location[1]]
                     i += 1
             else:
-                return "Error: please enter a valid direction."
+                return ["Error: please enter a valid direction."]
 
             #Raises an error if the word being played is not in the official scrabble dictionary (dic.txt).
             if self.word not in dictionary:
-                return "Please enter a valid dictionary word.\n"
+                return [f"Please enter a valid dictionary word. {self.word} is not in the dictionary.\n"]
 
             for one_other_word in self.other_words_intersect:
                 if one_other_word.word not in dictionary:
-                    return f"One of the intersecting words - {one_other_word} - is not a valid dictionary word."
+                    return [f"One of the intersecting words - {one_other_word.word} - is not a valid dictionary word."]
 
             #Ensures that the words overlap correctly. If there are conflicting letters between the current board and the word being played, raises an error.
             for i in range(len(self.word)):
@@ -426,11 +444,11 @@ class Word:
                     needed_tiles += self.word[i]
                 elif current_board_ltr[i] != self.word[i]:
                     print("Current_board_ltr: " + str(current_board_ltr) + ", Word: " + self.word + ", Needed_Tiles: " + needed_tiles)
-                    return "The letters do not overlap correctly, please choose another word."
+                    return ["The letters do not overlap correctly, please choose another word."]
 
             #If there is a blank tile, remove it's given value from the tiles needed to play the word.
-            if blank_tile_val != "":
-                needed_tiles = needed_tiles[needed_tiles.index(blank_tile_val.upper())+1:] + needed_tiles[:needed_tiles.index(blank_tile_val.upper())]
+            for blank_tile in blank_tile_val:
+                needed_tiles = needed_tiles[needed_tiles.index(blank_tile.upper())+1:] + needed_tiles[:needed_tiles.index(blank_tile.upper())]
                 print("NEEDED TILES: ",needed_tiles)
 
             #Ensures that the word will be connected to other words on the playing board.
@@ -438,16 +456,16 @@ class Word:
                 pass # to be completed with code to allow for intersecting other words without sharing an existing letter
             elif (round_number != 1 or (round_number == 1 and players[0] != self.player)) and current_board_ltr == "_" * len(self.word):
                 print("Current_board_ltr: " + str(current_board_ltr) + ", Word: " + self.word + ", Needed_Tiles: " + needed_tiles)
-                return "Please connect the word to a previously played letter."
+                return ["Please connect the word to a previously played letter."]
 
             #Raises an error if the player does not have the correct tiles to play the word.
             for letter in needed_tiles:
                 if letter not in self.player.get_rack_str() or self.player.get_rack_str().count(letter) < needed_tiles.count(letter):
-                    return "You do not have the tiles for this word\n"
+                    return ["You do not have the tiles for this word\n"]
 
             #Raises an error if the location of the word will be out of bounds.
             if self.location[0] > 14 or self.location[1] > 14 or self.location[0] < 0 or self.location[1] < 0 or (self.direction == "down" and (self.location[0]+len(self.word)-1) > 14) or (self.direction == "right" and (self.location[1]+len(self.word)-1) > 14):
-                return "Location out of bounds.\n"
+                return ["Location out of bounds.\n"]
 
             #Ensures that first turn of the game will have the word placed at (7,7).
             if round_number == 1 and players[0] == self.player and (
@@ -457,17 +475,22 @@ class Word:
                     self.direction == "right" and self.location[0] == 1 and self.location[1] <=7 and (self.location[0]+len(self.word)-1) >= 7
                 )
             ):
-                return "The first turn must begin at location (7, 7).\n"
-            return True
+                return ["The first turn must pass through location (7, 7).\n"]
+            # for blank_tile in blank_tile_val:
+            #     for tile in self.player.get_rack_arr():
+            #         if tile.get_letter() == "#":
+            #             tile.set_letter(blank_tile)
+            #             break
+            return [True, self.word, blank_tile_val]
 
         #If the user IS skipping the turn, confirm. If the user replies with "Y", skip the player's turn. Otherwise, allow the user to enter another word.
         else:
             if input("Are you sure you would like to skip your turn? (y/n)").upper() == "Y":
                 if round_number == 1 and players[0] == self.player:
                     return "Please do not skip the first turn. Please enter a word."
-                return True
+                return [True, self.word]
             else:
-                return "Please enter a word."
+                return ["Please enter a word."]
 
     def calculate_word_score(self):
         #Calculates the score of a word, allowing for the impact by premium squares.
@@ -532,6 +555,7 @@ def turn(player, board, bag):
     if (skipped_turns < 6) or (player.rack.get_rack_length() == 0 and bag.get_remaining_tiles() == 0):
 
         #Displays whose turn it is, the current board, and the player's rack.
+        print("\n"*(os.get_terminal_size().lines-24))
         print("\nRound " + str(round_number) + ": " + player.get_name() + "'s turn \n")
         print(board.get_board())
         print("\n" + player.get_name() + "'s Letter Rack: " + player.get_rack_str())
@@ -552,8 +576,8 @@ def turn(player, board, bag):
 
         #If the first word throws an error, creates a recursive loop until the information is given correctly.
         checked = word.check_word()
-        while checked != True:
-            print(checked)
+        while len(checked) == 1:
+            print(checked[0])
             word_to_play = input("Word to play: ")
             word.set_word(word_to_play)
             location = []
@@ -567,6 +591,7 @@ def turn(player, board, bag):
             direction = input("Direction of word (right or down): ")
             word.set_direction(direction)
             checked = word.check_word()
+        word.word = checked[1]
 
         #If the user has confirmed that they would like to skip their turn, skip it.
         #Otherwise, plays the correct word and prints the board.
@@ -574,11 +599,12 @@ def turn(player, board, bag):
             print("Your turn has been skipped.")
             skipped_turns += 1
         else:
+            blank_tile_val = checked[2]
             # need a way to check score for all words before placing the main word - calculate_other_word_score
             for one_other_word in word.other_words_intersect:
                 board.prelim_place_word(one_other_word.word, one_other_word.location, one_other_word.direction, player)
                 one_other_word.calculate_other_word_score()
-            board.place_word(word_to_play, location, direction, player)
+            board.place_word(word_to_play, location, direction, player, blank_tile_val)
             word.calculate_word_score()
             skipped_turns += 0
 
@@ -600,6 +626,14 @@ def turn(player, board, bag):
         end_game()
 
 def start_game():
+    if os.get_terminal_size().lines < 24:
+        print("Your terminal is too short. Increase the height of your terminal (or decrease the size of the font).")
+        while os.get_terminal_size().lines < 24:
+            pass
+    if os.get_terminal_size().columns < 64:
+        print("Your terminal is too narrow. Increase the width of your terminal (or decrease the size of the font).")
+        while os.get_terminal_size().lines < 64:
+            pass
     #Begins the game and calls the turn function.
     global round_number, players, skipped_turns
     board = Board()
