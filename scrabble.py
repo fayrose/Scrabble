@@ -419,6 +419,10 @@ class Word:
         #Assuming that the player is not skipping the turn:
         if self.word != "":
 
+            #Raises an error if the location of the word will be out of bounds.
+            if self.location[0] > 14 or self.location[1] > 14 or self.location[0] < 0 or self.location[1] < 0 or (self.direction == "down" and (self.location[0]+len(self.word)-1) > 14) or (self.direction == "right" and (self.location[1]+len(self.word)-1) > 14):
+                return ["Location out of bounds.\n"]
+
             #Allows for players to declare the value of a blank tile.
             i = 0
             while "#" in self.word:
@@ -538,10 +542,6 @@ class Word:
             for letter in needed_tiles:
                 if letter not in self.player.get_rack_str() or self.player.get_rack_str().count(letter) < needed_tiles.count(letter):
                     return ["You do not have the tiles for this word\n"]
-
-            #Raises an error if the location of the word will be out of bounds.
-            if self.location[0] > 14 or self.location[1] > 14 or self.location[0] < 0 or self.location[1] < 0 or (self.direction == "down" and (self.location[0]+len(self.word)-1) > 14) or (self.direction == "right" and (self.location[1]+len(self.word)-1) > 14):
-                return ["Location out of bounds.\n"]
 
             #Ensures that first turn of the game will have the word placed at (7,7).
             if round_number == 1 and players[0] == self.player:
