@@ -164,7 +164,7 @@ class Bag:
         self.add_to_bag(Tile("X", LETTER_VALUES), 1)
         self.add_to_bag(Tile("Y", LETTER_VALUES), 2)
         self.add_to_bag(Tile("Z", LETTER_VALUES), 1)
-        self.add_to_bag(Tile("#", LETTER_VALUES), 50)
+        self.add_to_bag(Tile("#", LETTER_VALUES), 2)
         shuffle(self.bag)
 
     def take_from_bag(self):
@@ -441,24 +441,26 @@ class Word:
                     self.word = self.board[self.location[0]][self.location[1]+j][1] + self.word
                     j -= 1
                 for i in range(len(self.word)):
-                    if "." not in self.board[self.location[0]][self.location[1]+j] and self.board[self.location[0]][self.location[1]+i].split("_")[1].join(['_']*2) in ["__","_^_","_*_","_<_","_+_"]:
+                    if "." in self.board[self.location[0]][self.location[1]+i]:
+                        current_board_ltr += self.board[self.location[0]][self.location[1]+i][1]
+                    elif self.board[self.location[0]][self.location[1]+i].split("_")[1].join(['_']*2) in ["__","_^_","_*_","_<_","_+_"]:
                         current_board_ltr += "_"
                         j = -1
                         other_word = ""
-                        while self.location[0]+j>=0 and ("." in self.board[self.location[0]][self.location[1]+j] or "." not in self.board[self.location[0]][self.location[1]+j] and self.board[self.location[0]+j][self.location[1]+i].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
+                        while self.location[0]+j>=0 and ("." in self.board[self.location[0]+j][self.location[1]+i] or "." not in self.board[self.location[0]+j][self.location[1]+i] and self.board[self.location[0]+j][self.location[1]+i].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
                             other_word = self.board[self.location[0]+j][self.location[1]+i][1] + other_word
                             start_position = [self.location[0]+j, self.location[1]+i]
                             j -= 1
                         if other_word:
                             other_word += self.word[i]
                             j = 1
-                            while self.location[0]+j<=14 and ("." in self.board[self.location[0]][self.location[1]+j] or "." not in self.board[self.location[0]][self.location[1]+j] and self.board[self.location[0]+j][self.location[1]+i].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
+                            while self.location[0]+j<=14 and ("." in self.board[self.location[0]+j][self.location[1]+i] or "." not in self.board[self.location[0]+j][self.location[1]+i] and self.board[self.location[0]+j][self.location[1]+i].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
                                 other_word += self.board[self.location[0]+j][self.location[1]+i][1]
                                 j += 1
                         else:
                             start_position = [self.location[0], self.location[1]+i]
                             j = 1
-                            while self.location[0]+j<=14 and ("." in self.board[self.location[0]][self.location[1]+j] or "." not in self.board[self.location[0]][self.location[1]+j] and self.board[self.location[0]+j][self.location[1]+i].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
+                            while self.location[0]+j<=14 and ("." in self.board[self.location[0]+j][self.location[1]+i] or "." not in self.board[self.location[0]+j][self.location[1]+i] and self.board[self.location[0]+j][self.location[1]+i].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
                                 other_word += self.board[self.location[0]+j][self.location[1]+i][1]
                                 j += 1
                             if other_word:
@@ -469,35 +471,37 @@ class Word:
                     else:
                         current_board_ltr += self.board[self.location[0]][self.location[1]+i][1]
                 i += 1
-                while self.location[1]+i <= 14 and ("." in self.board[self.location[0]][self.location[1]+j] or "." not in self.board[self.location[0]][self.location[1]+j] and self.board[self.location[0]][self.location[1]+i].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
+                while self.location[1]+i <= 14 and ("." in self.board[self.location[0]][self.location[1]+i] or "." not in self.board[self.location[0]][self.location[1]+i] and self.board[self.location[0]][self.location[1]+i].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
                     current_board_ltr += self.board[self.location[0]][self.location[1]+i][1]
                     self.word += self.board[self.location[0]][self.location[1]+i][1]
                     i += 1
             elif self.direction == "down":
                 j = -1
-                while self.location[0]+j >= 0 and ("." in self.board[self.location[0]][self.location[1]+j] or "." not in self.board[self.location[0]][self.location[1]+j] and self.board[self.location[0]+j][self.location[1]].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
+                while self.location[0]+j >= 0 and ("." in self.board[self.location[0]+j][self.location[1]] or "." not in self.board[self.location[0]+j][self.location[1]] and self.board[self.location[0]+j][self.location[1]].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
                     current_board_ltr = self.board[self.location[0]+j][self.location[1]][1] + current_board_ltr
                     self.word = self.board[self.location[0]+j][self.location[1]][1] + self.word
                     j -= 1
                 for i in range(len(self.word)):
-                    if "." not in self.board[self.location[0]][self.location[1]+j] and self.board[self.location[0]+i][self.location[1]].split("_")[1].join(['_']*2) in ["__","_^_","_*_","_<_","_+_"]:
+                    if "." in self.board[self.location[0]+i][self.location[1]]:
+                        current_board_ltr += self.board[self.location[0]+i][self.location[1]][1]
+                    elif self.board[self.location[0]+i][self.location[1]].split("_")[1].join(['_']*2) in ["__","_^_","_*_","_<_","_+_"]:
                         current_board_ltr += "_"
                         j = -1
                         other_word = ""
-                        while self.location[1]+j>=0 and ("." in self.board[self.location[0]][self.location[1]+j] or "." not in self.board[self.location[0]][self.location[1]+j] and self.board[self.location[0]+i][self.location[1]+j].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
+                        while self.location[1]+j>=0 and ("." in self.board[self.location[0]+i][self.location[1]+j] or "." not in self.board[self.location[0]+i][self.location[1]+j] and self.board[self.location[0]+i][self.location[1]+j].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
                             other_word = self.board[self.location[0]+i][self.location[1]+j][1] + other_word
                             start_position = [self.location[0]+i, self.location[1]+j]
                             j -= 1
                         if other_word:
                             other_word += self.word[i]
                             j = 1
-                            while self.location[1]+j<=14 and ("." in self.board[self.location[0]][self.location[1]+j] or "." not in self.board[self.location[0]][self.location[1]+j] and self.board[self.location[0]+i][self.location[1]+j].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
+                            while self.location[1]+j<=14 and ("." in self.board[self.location[0]+i][self.location[1]+j] or "." not in self.board[self.location[0]+i][self.location[1]+j] and self.board[self.location[0]+i][self.location[1]+j].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
                                 other_word += self.board[self.location[0]+i][self.location[1]+j][1]
                                 j += 1
                         else:
                             start_position = [self.location[0]+i, self.location[1]]
                             j = 1
-                            while self.location[1]+j<=14 and ("." in self.board[self.location[0]][self.location[1]+j] or "." not in self.board[self.location[0]][self.location[1]+j] and self.board[self.location[0]+i][self.location[1]+j].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
+                            while self.location[1]+j<=14 and ("." in self.board[self.location[0]+i][self.location[1]+j] or "." not in self.board[self.location[0]+i][self.location[1]+j] and self.board[self.location[0]+i][self.location[1]+j].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
                                 other_word += self.board[self.location[0]+i][self.location[1]+j][1]
                                 j += 1
                             if other_word:
@@ -508,7 +512,7 @@ class Word:
                     else:
                         current_board_ltr += self.board[self.location[0]+i][self.location[1]][1]
                 i += 1
-                while self.location[0]+i <= 14 and ("." in self.board[self.location[0]][self.location[1]+j] or "." not in self.board[self.location[0]][self.location[1]+j] and self.board[self.location[0]+i][self.location[1]].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
+                while self.location[0]+i <= 14 and ("." in self.board[self.location[0]+i][self.location[1]] or "." not in self.board[self.location[0]+i][self.location[1]] and self.board[self.location[0]+i][self.location[1]].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]):
                     current_board_ltr += self.board[self.location[0]+i][self.location[1]][1]
                     self.word += self.board[self.location[0]+i][self.location[1]][1]
                     i += 1
