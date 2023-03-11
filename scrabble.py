@@ -2,6 +2,8 @@ import os
 from ast import literal_eval
 from random import shuffle
 
+from termcolor import colored
+
 """
 Scrabble Game
 Classes:
@@ -41,7 +43,7 @@ LETTER_VALUES = {"A": 1,
                  "#": 0}
 
 def print_instructions():
-    print("INSTRUCTIONS".center(os.get_terminal_size()[0],"!"))
+    print(colored("INSTRUCTIONS".center(os.get_terminal_size()[0],"!"),'red'))
     print(
         """This Scrabble(TM) Game has been designed for 2-4 players
 
@@ -68,8 +70,8 @@ Here are some examples:
     0Ar - would start at column 0, row A, and go to the right
 
 SPECIAL SPACES
-+ = DOUBLE WORD SCORE            * = TRIPLE WORD SCORE
-< = DOUBLE LETTER SCORE          ^ = TRIPLE LETTER SCORE
+"""+colored(" + ","white","on_light_magenta")+"= DOUBLE WORD SCORE            "+colored(" * ","white","on_red")+"""= TRIPLE WORD SCORE
+"""+colored(" < ","white","on_light_blue")+"= DOUBLE LETTER SCORE          "+colored(" ^ ","white","on_blue")+"""= TRIPLE LETTER SCORE
 
 SPECIAL COMMANDS
 When you are asked to type a word, you can also type commands:
@@ -80,9 +82,9 @@ Other special commands will be added as required"""
     input("Press ENTER to continue")
 
 def wait_until_terminal_size_correct():
-    if os.get_terminal_size().lines < 26:
+    if os.get_terminal_size().lines < 28:
         print("Your terminal is too short. Increase the height of your terminal (or decrease the size of the font).")
-        while os.get_terminal_size().lines < 26:
+        while os.get_terminal_size().lines < 28:
             continue
     if os.get_terminal_size().columns < 64:
         print("Your terminal is too narrow. Increase the width of your terminal (or decrease the size of the font).")
@@ -284,7 +286,6 @@ class Board:
         #Creates a 2-dimensional array that will serve as the board, as well as adds in the premium squares.
         self.board = [["___" for i in range(15)] for j in range(15)]
         self.add_premium_squares()
-        self.board[7][7] = "_*_"
 
     def get_board(self):
         #Returns the board in string form.
@@ -294,12 +295,13 @@ class Board:
         board = list(self.board)
         for i in range(len(board)):
             if i < 10:
-                board[i] = str(i) + "|" + "|".join(str(item) for item in board[i]) + "|"
+                board[i] = str(i) + "|" + "|".join(str(item) for item in board[i]) + "|"+str(i)
                 # board[i] = str(i) + "  | " + " | ".join(str(item) for item in board[i]) + " |"
             if i >= 10:
-                board[i] = hex(i)[2].upper() + "|" + "|".join(str(item) for item in board[i]) + "|"
+                board[i] = hex(i)[2].upper() + "|" + "|".join(str(item) for item in board[i]) + "|"+hex(i)[2].upper()
                 # board[i] = str(i) + " | " + " | ".join(str(item) for item in board[i]) + " |"
         board_str += "\n".join(board)
+        board_str += "\n |_" + "_|_".join(str(item) for item in range(10)) + "_|_" + "_|_".join(ch for ch in 'ABCDE') + "_|"
         # board_str += "\n   |_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _|\n".join(board)
         # board_str += "\n   _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _"
         return board_str
@@ -307,18 +309,18 @@ class Board:
     def add_premium_squares(self):
         #Adds all of the premium squares that influence the word's score.
         TRIPLE_WORD_SCORE = ((0,0), (7, 0), (14,0), (0, 7), (14, 7), (0, 14), (7, 14), (14,14))
-        DOUBLE_WORD_SCORE = ((1,1), (2,2), (3,3), (4,4), (1, 13), (2, 12), (3, 11), (4, 10), (13, 1), (12, 2), (11, 3), (10, 4), (13,13), (12, 12), (11,11), (10,10))
+        DOUBLE_WORD_SCORE = ((1,1), (2,2), (3,3), (4,4), (1, 13), (2, 12), (3, 11), (4, 10), (13, 1), (12, 2), (11, 3), (10, 4), (13,13), (12, 12), (11,11), (10,10), (7,7))
         TRIPLE_LETTER_SCORE = ((1,5), (1, 9), (5,1), (5,5), (5,9), (5,13), (9,1), (9,5), (9,9), (9,13), (13, 5), (13,9))
         DOUBLE_LETTER_SCORE = ((0, 3), (0,11), (2,6), (2,8), (3,0), (3,7), (3,14), (6,2), (6,6), (6,8), (6,12), (7,3), (7,11), (8,2), (8,6), (8,8), (8, 12), (11,0), (11,7), (11,14), (12,6), (12,8), (14, 3), (14, 11))
 
         for coordinate in TRIPLE_WORD_SCORE:
-            self.board[coordinate[0]][coordinate[1]] = "_*_"
+            self.board[coordinate[0]][coordinate[1]] = colored("_*_","white","on_red")
         for coordinate in TRIPLE_LETTER_SCORE:
-            self.board[coordinate[0]][coordinate[1]] = "_^_"
+            self.board[coordinate[0]][coordinate[1]] = colored("_^_","white","on_blue")
         for coordinate in DOUBLE_WORD_SCORE:
-            self.board[coordinate[0]][coordinate[1]] = "_+_"
+            self.board[coordinate[0]][coordinate[1]] = colored("_+_","white","on_light_magenta")
         for coordinate in DOUBLE_LETTER_SCORE:
-            self.board[coordinate[0]][coordinate[1]] = "_<_"
+            self.board[coordinate[0]][coordinate[1]] = colored("_<_","white","on_light_blue")
 
     def place_word(self, word, location, direction, player, blanks):
         #Allows you to play words, assuming that they have already been confirmed as valid.
@@ -333,7 +335,7 @@ class Board:
                 if '.' in self.board[location[0]][location[1]+i]:
                     premium_spots.append((word[i], "ZPT", i))
                 elif self.board[location[0]][location[1]+i] != "___":
-                    premium_spots.append((word[i], self.board[location[0]][location[1]+i], i))
+                    premium_spots.append((word[i], self.board[location[0]][location[1]+i].split("_")[1].join(['_']*2), i))
                 if "." in self.board[location[0]][location[1]+i]:
                     continue
                 elif word[i] != "#":
@@ -349,7 +351,7 @@ class Board:
                 if '.' in self.board[location[0]+i][location[1]]:
                     premium_spots.append((word[i], "ZPT", i))
                 elif self.board[location[0]+i][location[1]] != "___":
-                    premium_spots.append((word[i], self.board[location[0]+i][location[1]], i))
+                    premium_spots.append((word[i], self.board[location[0]+i][location[1]].split("_")[1].join(['_']*2), i))
                 if "." in self.board[location[0]+i][location[1]]:
                     continue
                 elif word[i] != "#":
@@ -379,7 +381,7 @@ class Board:
                 if '.' in self.board[location[0]][location[1]+i]:
                     premium_spots.append((word[i], "ZPT", i))
                 elif self.board[location[0]][location[1]+i] != "___":
-                    premium_spots.append((word[i], self.board[location[0]][location[1]+i], i))
+                    premium_spots.append((word[i], self.board[location[0]][location[1]+i].split("_")[1].join(['_']*2), i))
 
         #Places the word going downwards
         elif direction.lower() == "down":
@@ -387,7 +389,7 @@ class Board:
                 if '.' in self.board[location[0]+i][location[1]]:
                     premium_spots.append((word[i], "ZPT", i))
                 elif self.board[location[0]+i][location[1]] != "___":
-                    premium_spots.append((word[i], self.board[location[0]+i][location[1]], i))
+                    premium_spots.append((word[i], self.board[location[0]+i][location[1]].split("_")[1].join(['_']*2), i))
 
     def board_array(self):
         #Returns the 2-dimensional board array.
@@ -434,29 +436,29 @@ class Word:
             #Reads in the board's current values under where the word that is being played will go. Raises an error if the direction is not valid.
             if self.direction == "right":
                 j = -1
-                while self.location[1]+j >= 0 and self.board[self.location[0]][self.location[1]+j] not in ["___","_^_","_*_","_<_","_+_","_*_"]:
+                while self.location[1]+j >= 0 and self.board[self.location[0]][self.location[1]+j].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]:
                     current_board_ltr = self.board[self.location[0]][self.location[1]+j][1] + current_board_ltr
                     self.word = self.board[self.location[0]][self.location[1]+j][1] + self.word
                     j -= 1
                 for i in range(len(self.word)):
-                    if self.board[self.location[0]][self.location[1]+i] in ["___","_^_","_*_","_<_","_+_","_*_"]:
+                    if self.board[self.location[0]][self.location[1]+i].split("_")[1].join(['_']*2) in ["__","_^_","_*_","_<_","_+_"]:
                         current_board_ltr += "_"
                         j = -1
                         other_word = ""
-                        while self.location[0]+j>=0 and self.board[self.location[0]+j][self.location[1]+i] not in ["___","_^_","_*_","_<_","_+_","_*_"]:
+                        while self.location[0]+j>=0 and self.board[self.location[0]+j][self.location[1]+i].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]:
                             other_word = self.board[self.location[0]+j][self.location[1]+i][1] + other_word
                             start_position = [self.location[0]+j, self.location[1]+i]
                             j -= 1
                         if other_word:
                             other_word += self.word[i]
                             j = 1
-                            while self.location[0]+j<=14 and self.board[self.location[0]+j][self.location[1]+i] not in ["___","_^_","_*_","_<_","_+_","_*_"]:
+                            while self.location[0]+j<=14 and self.board[self.location[0]+j][self.location[1]+i].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]:
                                 other_word += self.board[self.location[0]+j][self.location[1]+i][1]
                                 j += 1
                         else:
                             start_position = [self.location[0], self.location[1]+i]
                             j = 1
-                            while self.location[0]+j<=14 and self.board[self.location[0]+j][self.location[1]+i] not in ["___","_^_","_*_","_<_","_+_","_*_"]:
+                            while self.location[0]+j<=14 and self.board[self.location[0]+j][self.location[1]+i].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]:
                                 other_word += self.board[self.location[0]+j][self.location[1]+i][1]
                                 j += 1
                             if other_word:
@@ -467,35 +469,35 @@ class Word:
                     else:
                         current_board_ltr += self.board[self.location[0]][self.location[1]+i][1]
                 i += 1
-                while self.location[1]+i <= 14 and self.board[self.location[0]][self.location[1]+i] not in ["___","_^_","_*_","_<_","_+_","_*_"]:
+                while self.location[1]+i <= 14 and self.board[self.location[0]][self.location[1]+i].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]:
                     current_board_ltr += self.board[self.location[0]][self.location[1]+i][1]
                     self.word += self.board[self.location[0]][self.location[1]+i][1]
                     i += 1
             elif self.direction == "down":
                 j = -1
-                while self.location[0]+j >= 0 and self.board[self.location[0]+j][self.location[1]] not in ["___","_^_","_*_","_<_","_+_","_*_"]:
+                while self.location[0]+j >= 0 and self.board[self.location[0]+j][self.location[1]].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]:
                     current_board_ltr = self.board[self.location[0]+j][self.location[1]][1] + current_board_ltr
                     self.word = self.board[self.location[0]+j][self.location[1]][1] + self.word
                     j -= 1
                 for i in range(len(self.word)):
-                    if self.board[self.location[0]+i][self.location[1]] in ["___","_^_","_*_","_<_","_+_","_*_"]:
+                    if self.board[self.location[0]+i][self.location[1]].split("_")[1].join(['_']*2) in ["__","_^_","_*_","_<_","_+_"]:
                         current_board_ltr += "_"
                         j = -1
                         other_word = ""
-                        while self.location[1]+j>=0 and self.board[self.location[0]+i][self.location[1]+j] not in ["___","_^_","_*_","_<_","_+_","_*_"]:
+                        while self.location[1]+j>=0 and self.board[self.location[0]+i][self.location[1]+j].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]:
                             other_word = self.board[self.location[0]+i][self.location[1]+j][1] + other_word
                             start_position = [self.location[0]+i, self.location[1]+j]
                             j -= 1
                         if other_word:
                             other_word += self.word[i]
                             j = 1
-                            while self.location[1]+j<=14 and self.board[self.location[0]+i][self.location[1]+j] not in ["___","_^_","_*_","_<_","_+_","_*_"]:
+                            while self.location[1]+j<=14 and self.board[self.location[0]+i][self.location[1]+j].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]:
                                 other_word += self.board[self.location[0]+i][self.location[1]+j][1]
                                 j += 1
                         else:
                             start_position = [self.location[0]+i, self.location[1]]
                             j = 1
-                            while self.location[1]+j<=14 and self.board[self.location[0]+i][self.location[1]+j] not in ["___","_^_","_*_","_<_","_+_","_*_"]:
+                            while self.location[1]+j<=14 and self.board[self.location[0]+i][self.location[1]+j].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]:
                                 other_word += self.board[self.location[0]+i][self.location[1]+j][1]
                                 j += 1
                             if other_word:
@@ -506,7 +508,7 @@ class Word:
                     else:
                         current_board_ltr += self.board[self.location[0]+i][self.location[1]][1]
                 i += 1
-                while self.location[0]+i <= 14 and self.board[self.location[0]+i][self.location[1]] not in ["___","_^_","_*_","_<_","_+_","_*_"]:
+                while self.location[0]+i <= 14 and self.board[self.location[0]+i][self.location[1]].split("_")[1].join(['_']*2) not in ["__","_^_","_*_","_<_","_+_"]:
                     current_board_ltr += self.board[self.location[0]+i][self.location[1]]
                     self.word += self.board[self.location[0]+i][self.location[1]]
                     i += 1
@@ -581,8 +583,6 @@ class Word:
                 word_score *= 3
             elif spot[1] == "_+_":
                 word_score *= 2
-            elif spot[1] == "_*_":
-                word_score *= 2
         self.player.increase_score(word_score)
 
     def calculate_other_word_score(self):
@@ -606,8 +606,6 @@ class Word:
             if spot[1] == "_*_":
                 word_score *= 3
             elif spot[1] == "_+_":
-                word_score *= 2
-            elif spot[1] == "_*_":
                 word_score *= 2
         self.player.increase_score(word_score)
 
@@ -638,7 +636,7 @@ def turn(player, board, bag):
             print(f"{plyr.get_name()}'s score is {plyr.get_running_score()}={plyr.get_score()}")
         print("\nRound " + str(round_number) + ": " + player.get_name() + "'s turn\n")
         print(board.get_board())
-        print("+ = DWS ||| * = TWS ||| < = DLS ||| ^ = TLS")
+        print(colored("_+_","white","on_light_magenta")+"= DWS |||"+colored("_*_","white","on_red")+"= TWS |||"+colored("_<_","white","on_light_blue")+"= DLS |||"+colored("_^_","white","on_blue")+"= TLS")
         print(player.get_name() + "'s Letter Rack: " + player.get_rack_str())
         print(player.get_name() + " Letter Scores: " + player.get_rack_pts())
 
@@ -655,8 +653,10 @@ def turn(player, board, bag):
             elif 'instructions' in word_to_play.lower():
                 print_instructions()
                 turn(player, board, bag) 
-            print("Enter CRD for the word (e.g. 7AR will start the word in col 7, row A, and build to the right)")
-            CRD = input("Enter the CRD for the word: ").upper()
+            CRD = ''
+            while len(CRD)<3:
+                print("Enter CRD for the word (e.g. 7AR will start the word in col 7, row A, and build to the right)")
+                CRD = input("Enter the CRD for the word: ").upper()
             try:
                 col = literal_eval(f"0x{CRD[0]}")
                 row = literal_eval(f"0x{CRD[1]}")
@@ -723,16 +723,22 @@ def start_game():
     print_instructions()
 
     #Asks the player for the number of players.
-    num_of_players = int(input("\nPlease enter the number of players (2-4): "))
+    num_of_players = 0
     while num_of_players < 2 or num_of_players > 4:
-        num_of_players = int(input("This number is invalid. Please enter the number of players (2-4): "))
+        try:
+            num_of_players = int(input("Please enter the number of players (2-4): "))
+        except:
+            num_of_players = 0
 
     #Welcomes players to the game and allows players to choose their name.
     print("\nWelcome to Scrabble! Please enter the names of the players below.")
     players = []
     for i in range(num_of_players):
         players.append(Player(bag))
-        players[i].set_name(input("Please enter player " + str(i+1) + "'s name: "))
+        name = ''
+        while name == '' or name.lower() in [player.get_name().lower() for player in players]:
+            name = input("Please enter a unique name for player " + str(i+1) + ": ")
+        players[i].set_name(name)
 
     #Sets the default value of global variables.
     round_number = 1
