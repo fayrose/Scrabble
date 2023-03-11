@@ -491,9 +491,7 @@ class Word:
                 needed_tiles = needed_tiles[needed_tiles.index(blank_tile.upper())+1:] + needed_tiles[:needed_tiles.index(blank_tile.upper())]
 
             #Ensures that the word will be connected to other words on the playing board.
-            if (round_number != 1 or (round_number == 1 and players[0] != self.player)) and current_board_ltr == "_" * len(self.word):
-                pass # to be completed with code to allow for intersecting other words without sharing an existing letter
-            elif (round_number != 1 or (round_number == 1 and players[0] != self.player)) and current_board_ltr == "_" * len(self.word):
+            if (round_number != 1 or (round_number == 1 and players[0] != self.player)) and current_board_ltr == "_" * len(self.word) and len(self.other_words_intersect)==0:
                 print("Current_board_ltr: " + str(current_board_ltr) + ", Word: " + self.word + ", Needed_Tiles: " + needed_tiles)
                 return ["Please connect the word to a previously played letter."]
 
@@ -507,14 +505,10 @@ class Word:
                 return ["Location out of bounds.\n"]
 
             #Ensures that first turn of the game will have the word placed at (7,7).
-            if round_number == 1 and players[0] == self.player and (
-                (
-                    self.direction == "down" and self.location[1] == 1 and self.location[0] <=7 and (self.location[0]+len(self.word)-1) >= 7
-                ) or (
-                    self.direction == "right" and self.location[0] == 1 and self.location[1] <=7 and (self.location[0]+len(self.word)-1) >= 7
-                )
-            ):
-                return ["The first turn must pass through location (7, 7).\n"]
+            if round_number == 1 and players[0] == self.player:
+                if (self.direction == "down" and self.location[1] != 7 or self.location[0] > 7 or (self.location[0]+len(self.word)-1) < 7
+                ) or (self.direction == "right" and self.location[0] != 7 and self.location[1] > 7 and (self.location[1]+len(self.word)-1) < 7):
+                    return ["The first turn must pass through location (7, 7).\n"]
             return [True, self.word, blank_tile_val]
 
         #If the user IS skipping the turn, confirm. If the user replies with "Y", skip the player's turn. Otherwise, allow the user to enter another word.
