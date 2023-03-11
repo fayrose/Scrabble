@@ -636,9 +636,10 @@ def turn(player, board, bag):
         print("\n"*(os.get_terminal_size().lines-24-len(players)))
         for plyr in players:
             print(f"{plyr.get_name()}'s score is {plyr.get_running_score()}={plyr.get_score()}")
-        print("\nRound " + str(round_number) + ": " + player.get_name() + "'s turn \n")
+        print("\nRound " + str(round_number) + ": " + player.get_name() + "'s turn\n")
         print(board.get_board())
-        print("\n" + player.get_name() + "'s Letter Rack: " + player.get_rack_str())
+        print("+ = DWS ||| * = TWS ||| < = DLS ||| ^ = TLS")
+        print(player.get_name() + "'s Letter Rack: " + player.get_rack_str())
         print(player.get_name() + " Letter Scores: " + player.get_rack_pts())
 
         #If the first word throws an error, creates a recursive loop until the information is given correctly.
