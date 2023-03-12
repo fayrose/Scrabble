@@ -46,19 +46,15 @@ def print_instructions():
     print(colored("INSTRUCTIONS".center(os.get_terminal_size()[0],"!"),'red'))
     print(
         """This Scrabble(TM) Game has been designed for 2-4 players
-
-All characters can be typed lower- or upper-case.
-
-BLANK/WILDCARD TILES
-There are two blank/wildcard tiles in the game.
-They will be represented with # when they are in your hand.
-These tiles are worth 0 points, but may help you build words.
-To use a blank/wildcard tile, type the word with # in its place.
+NOTE: All characters can be typed lower- or upper-case.
+-----BLANK/WILDCARD TILES-----
+There are two blank/wildcard tiles in the game (represented by #).
+]These tiles are worth 0 points, but may help you build words.
+To use a blank tile, type the word with # in its place.
 For example, type 'wor#' if you want to use it to play 'word'.
 The program will ask you to pick what letter # will represent.
 When the wildcard is placed on the board, it will look like '.D.'
-
-USING THE BOARD
+-----USING THE BOARD-----
 The board has its columns and rows labeled for reference.
 You will provide a start position and direction of the word.
 Start position is the column and row of the first letter.
@@ -67,13 +63,11 @@ You will provide a 3-character command for placement.
     First = column, second = row, third = direction
 Here are some examples:
     77d - would start at column 7, row 7, and go down from there
-    0Ar - would start at column 0, row A, and go to the right
-
-SPECIAL SPACES
+    0ar - would start at column 0, row a, and go to the right
+-----SPECIAL SPACES-----
 """+colored(" + ","white","on_light_magenta")+"= DOUBLE WORD SCORE            "+colored(" * ","white","on_red")+"""= TRIPLE WORD SCORE
 """+colored(" < ","white","on_light_blue")+"= DOUBLE LETTER SCORE          "+colored(" ^ ","white","on_blue")+"""= TRIPLE LETTER SCORE
-
-SPECIAL COMMANDS
+-----SPECIAL COMMANDS-----
 When you are asked to type a word, you can also type commands:
     shuffle rack - will randomly shuffle your tiles
     print instructions - will print the instructions again
@@ -289,7 +283,7 @@ class Board:
 
     def get_board(self):
         #Returns the board in string form.
-        board_str = " |_" + "_|_".join(str(item) for item in range(10)) + "_|_" + "_|_".join(ch for ch in 'ABCDE') + "_|\n"
+        board_str = " | " + " | ".join(str(item) for item in range(10)) + " | " + " | ".join(ch for ch in 'abcde') + " | \n"
         # board_str = "   |  " + "  |  ".join(str(item) for item in range(10)) + "  | " + "  | ".join(str(item) for item in range(10, 15)) + " |"
         # board_str += "\n   _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n"
         board = list(self.board)
@@ -301,7 +295,7 @@ class Board:
                 board[i] = hex(i)[2].upper() + "|" + "|".join(str(item) for item in board[i]) + "|"+hex(i)[2].upper()
                 # board[i] = str(i) + " | " + " | ".join(str(item) for item in board[i]) + " |"
         board_str += "\n".join(board)
-        board_str += "\n |_" + "_|_".join(str(item) for item in range(10)) + "_|_" + "_|_".join(ch for ch in 'ABCDE') + "_|"
+        board_str += "\n | " + " | ".join(str(item) for item in range(10)) + " | " + " | ".join(ch for ch in 'abcde') + " | "
         # board_str += "\n   |_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _|\n".join(board)
         # board_str += "\n   _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _"
         return board_str
