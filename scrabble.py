@@ -80,9 +80,9 @@ def wait_until_terminal_size_correct():
         print("Your terminal is too short. Increase the height of your terminal (or decrease the size of the font).")
         while os.get_terminal_size().lines < 28:
             continue
-    if os.get_terminal_size().columns < 64:
+    if os.get_terminal_size().columns < 66:
         print("Your terminal is too narrow. Increase the width of your terminal (or decrease the size of the font).")
-        while os.get_terminal_size().columns < 64:
+        while os.get_terminal_size().columns < 66:
             continue
 
 class Tile:
@@ -292,7 +292,7 @@ class Board:
                 board[i] = str(i) + "|" + "|".join(str(item) for item in board[i]) + "|"+str(i)
                 # board[i] = str(i) + "  | " + " | ".join(str(item) for item in board[i]) + " |"
             if i >= 10:
-                board[i] = hex(i)[2].upper() + "|" + "|".join(str(item) for item in board[i]) + "|"+hex(i)[2].upper()
+                board[i] = hex(i)[2] + "|" + "|".join(str(item) for item in board[i]) + "|"+hex(i)[2]
                 # board[i] = str(i) + " | " + " | ".join(str(item) for item in board[i]) + " |"
         board_str += "\n".join(board)
         board_str += "\n | " + " | ".join(str(item) for item in range(10)) + " | " + " | ".join(ch for ch in 'abcde') + " | "
