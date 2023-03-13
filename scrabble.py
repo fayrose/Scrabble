@@ -323,43 +323,62 @@ class Board:
         direction = direction.lower()
         word = word.upper()
 
+        count = 0
+
         #Places the word going rightwards
         if direction.lower() == "right":
             for i in range(len(word)):
                 if '.' in self.board[location[0]][location[1]+i]:
                     premium_spots.append((word[i], "ZPT", i))
-                elif self.board[location[0]][location[1]+i] != "___":
-                    premium_spots.append((word[i], self.board[location[0]][location[1]+i].split("_")[1].join(['_']*2), i))
-                if "." in self.board[location[0]][location[1]+i]:
                     continue
-                elif word[i] != "#":
-                    self.board[location[0]][location[1]+i] = "_" + word[i] + "_"
+                elif self.board[location[0]][location[1]+i] == word[i].join(["_"]*2):
+                    continue
                 else:
-                    premium_spots.append((blanks[0], "ZPT", i))
-                    self.board[location[0]][location[1]+i] = "." + blanks[0] + "."
-                    blanks = blanks[1:]
+                    if self.board[location[0]][location[1]+i] != "___":
+                        premium_spots.append((word[i], self.board[location[0]][location[1]+i].split("_")[1].join(['_']*2), i))
+                    if word[i] != "#":
+                        self.board[location[0]][location[1]+i] = "_" + word[i] + "_"
+                    else:
+                        premium_spots.append((blanks[0], "ZPT", i))
+                        self.board[location[0]][location[1]+i] = "." + blanks[0] + "."
+                        blanks = blanks[1:]
+                    #Removes tiles from player's rack
+                    for tile in player.get_rack_arr():
+                        if tile.get_letter() == word[i]:
+                            print(f"Removed {tile.get_letter()} from player rack.")
+                            player.rack.remove_from_rack(tile)
+                            count += 1
+                            break
 
         #Places the word going downwards
         elif direction.lower() == "down":
             for i in range(len(word)):
                 if '.' in self.board[location[0]+i][location[1]]:
                     premium_spots.append((word[i], "ZPT", i))
-                elif self.board[location[0]+i][location[1]] != "___":
-                    premium_spots.append((word[i], self.board[location[0]+i][location[1]].split("_")[1].join(['_']*2), i))
-                if "." in self.board[location[0]+i][location[1]]:
                     continue
-                elif word[i] != "#":
-                    self.board[location[0]+i][location[1]] = "_" + word[i] + "_"
+                elif self.board[location[0]+i][location[1]] == word[i].join(["_"]*2):
+                    continue
                 else:
-                    premium_spots.append((blanks[0], "ZPT", i))
-                    self.board[location[0]+i][location[1]] = "." + blanks[0] + "."
-                    blanks = blanks[1:]
+                    if self.board[location[0]+i][location[1]] != "___":
+                        premium_spots.append((word[i], self.board[location[0]+i][location[1]].split("_")[1].join(['_']*2), i))
+                    if word[i] != "#":
+                        self.board[location[0]+i][location[1]] = "_" + word[i] + "_"
+                    else:
+                        premium_spots.append((blanks[0], "ZPT", i))
+                        self.board[location[0]+i][location[1]] = "." + blanks[0] + "."
+                        blanks = blanks[1:]
+                    #Removes tiles from player's rack
+                    for tile in player.get_rack_arr():
+                        if tile.get_letter() == word[i]:
+                            print(f"Removed {tile.get_letter()} from player rack.")
+                            player.rack.remove_from_rack(tile)
+                            count += 1
+                            break
 
-        #Removes tiles from player's rack and replaces them with tiles from the bag.
-        for letter in word:
-            for tile in player.get_rack_arr():
-                if tile.get_letter() == letter:
-                    player.rack.remove_from_rack(tile)
+        if count == 7:
+            print("BONUS for using all 7 of your tiles!!!")
+            player.increase_score(50)
+        #Replaces tiles with tiles from the bag.
         player.rack.replenish_rack()
 
     def prelim_place_word(self, word, location, direction, player):
@@ -460,7 +479,7 @@ class Word:
                             if other_word:
                                 other_word = self.word[i] + other_word
                         if other_word:
-                            print(f"Found an intersecting word: {other_word}")
+                            # print(f"Found an intersecting word: {other_word}")
                             self.other_words_intersect.append(Word(other_word, start_position, self.player, 'down', self.board))
                     else:
                         current_board_ltr += self.board[self.location[0]][self.location[1]+i][1]
@@ -501,7 +520,7 @@ class Word:
                             if other_word:
                                 other_word = self.word[i] + other_word
                         if other_word:
-                            print(f"Found an intersecting word: {other_word}")
+                            # print(f"Found an intersecting word: {other_word}")
                             self.other_words_intersect.append(Word(other_word, start_position, self.player, 'right', self.board))
                     else:
                         current_board_ltr += self.board[self.location[0]+i][self.location[1]][1]
@@ -626,6 +645,7 @@ def turn(player, board, bag):
 
     #If the number of skipped turns is less than 6 and a row, and there are either tiles in the bag, or no players have run out of tiles, play the turn.
     #Otherwise, end the game.
+    print(f"Player tiles: {player.rack.get_rack_length()} --- Bag tiles: {bag.get_remaining_tiles()}")
     if (skipped_turns < 6) or (player.rack.get_rack_length() == 0 and bag.get_remaining_tiles() == 0):
 
         #Displays whose turn it is, the current board, and the player's rack.
@@ -693,9 +713,7 @@ def turn(player, board, bag):
 
         #Prints the current player's score
         round_score = player.get_score()-old_score
-        player.add_running_score(round_score)
-        print(f"\n{player.get_name()}'s score is {player.get_running_score()}={player.get_score()}")
-        
+        player.add_running_score(round_score)        
 
         #Gets the next player.
         if players.index(player) != (len(players)-1):
