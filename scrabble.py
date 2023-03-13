@@ -646,7 +646,7 @@ def turn(player, board, bag):
     #If the number of skipped turns is less than 6 and a row, and there are either tiles in the bag, or no players have run out of tiles, play the turn.
     #Otherwise, end the game.
     print(f"Player tiles: {player.rack.get_rack_length()} --- Bag tiles: {bag.get_remaining_tiles()}")
-    if (skipped_turns < 6) or (player.rack.get_rack_length() == 0 and bag.get_remaining_tiles() == 0):
+    if (skipped_turns < 6):
 
         #Displays whose turn it is, the current board, and the player's rack.
         print("\n"*(os.get_terminal_size().lines-24-len(players)))
@@ -655,6 +655,7 @@ def turn(player, board, bag):
         print("\nRound " + str(round_number) + ": " + player.get_name() + "'s turn\n")
         print(board.get_board())
         print(colored("_+_","white","on_light_magenta")+"= DWS |||"+colored("_*_","white","on_red")+"= TWS |||"+colored("_<_","white","on_light_blue")+"= DLS |||"+colored("_^_","white","on_blue")+"= TLS")
+        print(f"Player tiles: {player.rack.get_rack_length()} --- Bag tiles: {bag.get_remaining_tiles()}")
         print(player.get_name() + "'s Letter Rack: " + player.get_rack_str())
         print(player.get_name() + " Letter Scores: " + player.get_rack_pts())
 
@@ -715,15 +716,18 @@ def turn(player, board, bag):
         round_score = player.get_score()-old_score
         player.add_running_score(round_score)        
 
-        #Gets the next player.
-        if players.index(player) != (len(players)-1):
-            player = players[players.index(player)+1]
+        if (player.rack.get_rack_length() == 0 and bag.get_remaining_tiles() == 0):
+            end_game()
         else:
-            player = players[0]
-            round_number += 1
+            #Gets the next player.
+            if players.index(player) != (len(players)-1):
+                player = players[players.index(player)+1]
+            else:
+                player = players[0]
+                round_number += 1
 
-        #Recursively calls the function in order to play the next turn.
-        turn(player, board, bag)
+            #Recursively calls the function in order to play the next turn.
+            turn(player, board, bag)
 
     #If the number of skipped turns is over 6 or the bag has both run out of tiles and a player is out of tiles, end the game.
     else:
@@ -765,13 +769,26 @@ def start_game():
 def end_game():
     #Forces the game to end when the bag runs out of tiles.
     global players
-    highest_score = 0
-    winning_player = ""
+    point_bonus = 0
     for player in players:
-        if player.get_score > highest_score:
+        if player.rack.get_rack_length()>0:
+            lost_points = sum([int(tile_pts) for tile_pts in player.get_rack_pts().split(', ')])
+            player.increase_score(-lost_points)
+            print(f"{player.get_name()} lost {lost_points} points due to end-of-game penalty.")
+            point_bonus += lost_points
+    for player in players:
+        if player.rack.get_rack_length() == 0:
+            player.increase_score(point_bonus)
+            print(f"{player.get_name()} won {point_bonus} points due to end-of-game bonus.")
+    highest_score = 0
+    winning_player = [] 
+    for player in players:
+        if player.get_score() > highest_score:
             highest_score = player.get_score()
-            winning_player = player.get_name()
-    print("The game is over! " + winning_player + ", you have won!")
+            winning_player = [player.get_name()]
+        elif player.get_score() == highest_score:
+            winning_player.append(player.get_name())
+    print("The game is over!\n!!!!!" + " & ".join(winning_player) + ", you have won!!!!!")
 
     if input("\nWould you like to play again? (y/n)").upper() == "Y":
         start_game()
