@@ -266,6 +266,8 @@ class Player:
 
     def get_running_score(self):
         # display the running score
+        if len(self.running_score) > 10:
+            return "...+"+"+".join([str(x) for x in self.running_score[-10:]])
         return "+".join([str(x) for x in self.running_score])
 
     def get_score(self):
@@ -370,7 +372,7 @@ class Board:
                     #Removes tiles from player's rack
                     for tile in player.get_rack_arr():
                         if tile.get_letter() == word[i]:
-                            print(f"Removed {tile.get_letter()} from player rack.")
+                            # print(f"Removed {tile.get_letter()} from player rack.")
                             player.rack.remove_from_rack(tile)
                             count += 1
                             break
@@ -643,9 +645,8 @@ def turn(player, board, bag):
     global round_number, players, skipped_turns
     wait_until_terminal_size_correct()
 
-    #If the number of skipped turns is less than 6 and a row, and there are either tiles in the bag, or no players have run out of tiles, play the turn.
+    #If the number of skipped turns is less than 6 and a row
     #Otherwise, end the game.
-    print(f"Player tiles: {player.rack.get_rack_length()} --- Bag tiles: {bag.get_remaining_tiles()}")
     if (skipped_turns < 6):
 
         #Displays whose turn it is, the current board, and the player's rack.
@@ -672,9 +673,31 @@ def turn(player, board, bag):
             elif 'instructions' in word_to_play.lower():
                 print_instructions()
                 turn(player, board, bag) 
+            elif 'exchange tiles' in word_to_play.lower():
+                if bag.get_remaining_tiles() >= 7:
+                    tile_to_exchange = input('Which tiles do you want to exchange? ').upper()
+                    for tile in tile_to_exchange:
+                        for letter in player.get_rack_arr():
+                            if letter.get_letter() == tile:
+                                player.rack.remove_from_rack(letter)
+                                bag.add_to_bag(tile, 1)
+                                break
+                    player.rack.replenish_rack()
+                    player.add_running_score(round_score)
+                    #Gets the next player.
+                    if players.index(player) != (len(players)-1):
+                        player = players[players.index(player)+1]
+                    else:
+                        player = players[0]
+                        round_number += 1
+                    #Recursively calls the function in order to play the next turn.
+                    turn(player, board, bag)
+                else:
+                    print('There are not enough tiles remaining to exchange tiles.')
+                    word_to_play = input("Word to play: ")
             CRD = ''
             while len(CRD)<3:
-                print("Enter CRD for the word (e.g. 7AR will start the word in col 7, row A, and build to the right)")
+                # print("Enter CRD for the word (e.g. 7AR will start the word in col 7, row A, and build to the right)")
                 CRD = input("Enter the CRD for the word: ").upper()
             try:
                 col = literal_eval(f"0x{CRD[0]}")
@@ -716,8 +739,9 @@ def turn(player, board, bag):
         round_score = player.get_score()-old_score
         player.add_running_score(round_score)        
 
+        # If there are no tiles in the bag and a player has run out of tiles, end the game.
         if (player.rack.get_rack_length() == 0 and bag.get_remaining_tiles() == 0):
-            end_game()
+            end_game(board)
         else:
             #Gets the next player.
             if players.index(player) != (len(players)-1):
@@ -731,7 +755,7 @@ def turn(player, board, bag):
 
     #If the number of skipped turns is over 6 or the bag has both run out of tiles and a player is out of tiles, end the game.
     else:
-        end_game()
+        end_game(board)
 
 def start_game():
     wait_until_terminal_size_correct()
@@ -759,16 +783,21 @@ def start_game():
         while name == '' or name.lower() in [player.get_name().lower() for player in players]:
             name = input("Please enter a unique name for player " + str(i+1) + ": ")
         players[i].set_name(name)
-
+    #Randomly select order of players
+    shuffle(players)
     #Sets the default value of global variables.
     round_number = 1
     skipped_turns = 0
     current_player = players[0]
     turn(current_player, board, bag)
 
-def end_game():
+def end_game(board):
     #Forces the game to end when the bag runs out of tiles.
     global players
+    print("\n"*(os.get_terminal_size().lines-24-len(players)))
+    for plyr in players:
+        print(f"{plyr.get_name()}'s score is {plyr.get_running_score()}={plyr.get_score()}")
+    print(board.get_board())
     point_bonus = 0
     for player in players:
         if player.rack.get_rack_length()>0:
@@ -783,6 +812,7 @@ def end_game():
     highest_score = 0
     winning_player = [] 
     for player in players:
+        print(f"{player.get_name()} = {player.get_score()}")
         if player.get_score() > highest_score:
             highest_score = player.get_score()
             winning_player = [player.get_name()]
