@@ -47,14 +47,14 @@ def print_instructions():
     print(
         """This Scrabble(TM) Game has been designed for 2-4 players
 NOTE: All characters can be typed lower- or upper-case.
------BLANK/WILDCARD TILES-----
+"""+colored("BLANK/WILDCARD TILES".center(os.get_terminal_size()[0],"-"),'yellow')+"""
 There are two blank/wildcard tiles in the game (represented by #).
-]These tiles are worth 0 points, but may help you build words.
+These tiles are worth 0 points, but may help you build words.
 To use a blank tile, type the word with # in its place.
 For example, type 'wor#' if you want to use it to play 'word'.
 The program will ask you to pick what letter # will represent.
 When the wildcard is placed on the board, it will look like '.D.'
------USING THE BOARD-----
+"""+colored("USING THE BOARD".center(os.get_terminal_size()[0],"-"),'yellow')+"""
 The board has its columns and rows labeled for reference.
 You will provide a start position and direction of the word.
 Start position is the column and row of the first letter.
@@ -64,13 +64,14 @@ You will provide a 3-character command for placement.
 Here are some examples:
     77d - would start at column 7, row 7, and go down from there
     0ar - would start at column 0, row a, and go to the right
------SPECIAL SPACES-----
+"""+colored("SPECIAL SPACES".center(os.get_terminal_size()[0],"-"),'yellow')+"""
 """+colored(" + ","white","on_light_magenta")+"= DOUBLE WORD SCORE            "+colored(" * ","white","on_red")+"""= TRIPLE WORD SCORE
 """+colored(" < ","white","on_light_blue")+"= DOUBLE LETTER SCORE          "+colored(" ^ ","white","on_blue")+"""= TRIPLE LETTER SCORE
------SPECIAL COMMANDS-----
+"""+colored("SPECIAL COMMANDS".center(os.get_terminal_size()[0],"-"),'yellow')+"""
 When you are asked to type a word, you can also type commands:
     shuffle rack - will randomly shuffle your tiles
     print instructions - will print the instructions again
+    exchange tiles - will exchange tiles (and skip your turn)
 Other special commands will be added as required"""
     )
     input("Press ENTER to continue")
@@ -161,6 +162,9 @@ class Bag:
         self.add_to_bag(Tile("#", LETTER_VALUES), 2)
         shuffle(self.bag)
 
+    def shuffle_bag(self):
+        shuffle(self.bag)
+    
     def take_from_bag(self):
         #Removes a tile from the bag and returns it to the user. This is used for replenishing the rack.
         return self.bag.pop()
@@ -218,6 +222,7 @@ class Rack:
 
     def replenish_rack(self):
         #Adds tiles to the rack after a turn such that the rack will have 7 tiles (assuming a proper number of tiles in the bag).
+        self.bag.shuffle_bag()
         while self.get_rack_length() < 7 and self.bag.get_remaining_tiles() > 0:
             self.add_to_rack()
 
@@ -555,7 +560,7 @@ class Word:
                 needed_tiles = needed_tiles[needed_tiles.index(blank_tile.upper())+1:] + needed_tiles[:needed_tiles.index(blank_tile.upper())]
 
             #Ensures that the word will be connected to other words on the playing board.
-            if (round_number != 1 or (round_number == 1 and players[0] != self.player)) and current_board_ltr == "_" * len(self.word) and len(self.other_words_intersect)==0:
+            if (round_number != 1 or (round_number == 1 and players[0] != self.player and players[0].get_score()>0)) and current_board_ltr == "_" * len(self.word) and len(self.other_words_intersect)==0:
                 print("Current_board_ltr: " + str(current_board_ltr) + ", Word: " + self.word + ", Needed_Tiles: " + needed_tiles)
                 return ["Please connect the word to a previously played letter."]
 
@@ -565,7 +570,7 @@ class Word:
                     return ["You do not have the tiles for this word\n"]
 
             #Ensures that first turn of the game will have the word placed at (7,7).
-            if round_number == 1 and players[0] == self.player:
+            if round_number == 1 and (players[0] == self.player or (players[0] != self.player and players[0].get_score()==0)):
                 if (self.direction == "down" and self.location[1] != 7 or self.location[0] > 7 or (self.location[0]+len(self.word)-1) < 7
                 ) or (self.direction == "right" and self.location[0] != 7 and self.location[1] > 7 and (self.location[1]+len(self.word)-1) < 7):
                     return ["The first turn must pass through location (7, 7).\n"]
@@ -656,7 +661,7 @@ def turn(player, board, bag):
         print("\nRound " + str(round_number) + ": " + player.get_name() + "'s turn\n")
         print(board.get_board())
         print(colored("_+_","white","on_light_magenta")+"= DWS |||"+colored("_*_","white","on_red")+"= TWS |||"+colored("_<_","white","on_light_blue")+"= DLS |||"+colored("_^_","white","on_blue")+"= TLS")
-        print(f"Player tiles: {player.rack.get_rack_length()} --- Bag tiles: {bag.get_remaining_tiles()}")
+        print(f"{player.get_name()} Player tiles: {player.rack.get_rack_length()} --- Bag tiles: {bag.get_remaining_tiles()}")
         print(player.get_name() + "'s Letter Rack: " + player.get_rack_str())
         print(player.get_name() + " Letter Scores: " + player.get_rack_pts())
 
@@ -673,17 +678,17 @@ def turn(player, board, bag):
             elif 'instructions' in word_to_play.lower():
                 print_instructions()
                 turn(player, board, bag) 
-            elif 'exchange tiles' in word_to_play.lower():
+            elif 'exchange tiles' in word_to_play.lower() or 'exchange' in word_to_play.lower() and len(word_to_play.split(' '))>1:
                 if bag.get_remaining_tiles() >= 7:
                     tile_to_exchange = input('Which tiles do you want to exchange? ').upper()
                     for tile in tile_to_exchange:
                         for letter in player.get_rack_arr():
                             if letter.get_letter() == tile:
                                 player.rack.remove_from_rack(letter)
-                                bag.add_to_bag(tile, 1)
+                                bag.add_to_bag(letter, 1)
                                 break
                     player.rack.replenish_rack()
-                    player.add_running_score(round_score)
+                    player.add_running_score(0)
                     #Gets the next player.
                     if players.index(player) != (len(players)-1):
                         player = players[players.index(player)+1]
