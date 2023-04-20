@@ -290,7 +290,7 @@ class Word:
             if "#" in self.word:
                 while len(blank_tile_val) != 1:
                     blank_tile_val = input("Please enter the letter value of the blank tile: ")
-                self.word = self.word[:word.index("#")] + blank_tile_val.upper() + self.word[(word.index("#")+1):]
+                self.word = self.word[:self.word.index("#")] + blank_tile_val.upper() + self.word[(self.word.index("#")+1):]
 
             #Reads in the board's current values under where the word that is being played will go. Raises an error if the direction is not valid.
             if self.direction == "right":
