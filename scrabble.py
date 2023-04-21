@@ -247,8 +247,8 @@ class Board:
         #Places the word going downwards
         elif direction.lower() == "down":
             for i in range(len(word)):
-                if self.board[location[0]][location[1]+i] != "   ":
-                    premium_spots.append((word[i], self.board[location[0]][location[1]+i]))
+                if self.board[location[0]+i][location[1]] != "   ":
+                    premium_spots.append((word[i], self.board[location[0]+i][location[1]]))
                 self.board[location[0]+i][location[1]] = " " + word[i] + " "
 
         #Removes tiles from player's rack and replaces them with tiles from the bag.
