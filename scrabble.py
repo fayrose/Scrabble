@@ -19,7 +19,7 @@ LETTER_VALUES = {"A": 1,
                  "G": 2,
                  "H": 4,
                  "I": 1,
-                 "J": 1,
+                 "J": 8,
                  "K": 5,
                  "L": 1,
                  "M": 3,
@@ -247,8 +247,8 @@ class Board:
         #Places the word going downwards
         elif direction.lower() == "down":
             for i in range(len(word)):
-                if self.board[location[0]][location[1]+i] != "   ":
-                    premium_spots.append((word[i], self.board[location[0]][location[1]+i]))
+                if self.board[location[0]+i][location[1]] != "   ":
+                    premium_spots.append((word[i], self.board[location[0]+i][location[1]]))
                 self.board[location[0]+i][location[1]] = " " + word[i] + " "
 
         #Removes tiles from player's rack and replaces them with tiles from the bag.
@@ -290,7 +290,7 @@ class Word:
             if "#" in self.word:
                 while len(blank_tile_val) != 1:
                     blank_tile_val = input("Please enter the letter value of the blank tile: ")
-                self.word = self.word[:word.index("#")] + blank_tile_val.upper() + self.word[(word.index("#")+1):]
+                self.word = self.word[:self.word.index("#")] + blank_tile_val.upper() + self.word[(self.word.index("#")+1):]
 
             #Reads in the board's current values under where the word that is being played will go. Raises an error if the direction is not valid.
             if self.direction == "right":
@@ -337,10 +337,16 @@ class Word:
             #Raises an error if the location of the word will be out of bounds.
             if self.location[0] > 14 or self.location[1] > 14 or self.location[0] < 0 or self.location[1] < 0 or (self.direction == "down" and (self.location[0]+len(self.word)-1) > 14) or (self.direction == "right" and (self.location[1]+len(self.word)-1) > 14):
                 return "Location out of bounds.\n"
-
+              
+            all_tiles = []
+            for i in range(len(self.word)):
+                if self.direction == 'right':
+                    all_tiles.append([self.location[0],self.location[1]+i])
+                elif self.direction == 'down':
+                    all_tiles.append([self.location[0]+i,self.location[1]])
             #Ensures that first turn of the game will have the word placed at (7,7).
-            if round_number == 1 and players[0] == self.player and self.location != [7,7]:
-                return "The first turn must begin at location (7, 7).\n"
+            if round_number == 1 and players[0] == self.player and [7,7] not in all_tiles:
+                return "The first turn must intersect with location (7, 7).\n"
             return True
 
         #If the user IS skipping the turn, confirm. If the user replies with "Y", skip the player's turn. Otherwise, allow the user to enter another word.
@@ -367,7 +373,7 @@ class Word:
         for spot in premium_spots:
             if spot[1] == "TWS":
                 word_score *= 3
-            elif spot[1] == "DWS":
+            elif spot[1] == "DWS" or spot[1] == " * ":
                 word_score *= 2
         self.player.increase_score(word_score)
 
